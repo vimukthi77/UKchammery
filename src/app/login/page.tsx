@@ -115,6 +115,23 @@ export default function LoginPage() {
             display: none;
           }
         }
+        .glowing-team {
+          color: #22C55E;
+          font-weight: 800;
+          text-shadow: 0 0 4px rgba(34, 197, 94, 0.3);
+          animation: pulse-glow 2s ease-in-out infinite;
+          transition: color 0.3s ease;
+        }
+        @keyframes pulse-glow {
+          0%, 100% {
+            text-shadow: 0 0 3px rgba(34, 197, 94, 0.4), 0 0 6px rgba(34, 197, 94, 0.2);
+            color: #22C55E;
+          }
+          50% {
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.8), 0 0 15px rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+          }
+        }
       `}</style>
 
       {/* Left side: Login form */}
@@ -202,7 +219,7 @@ export default function LoginPage() {
           </form>
 
           <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--muted)', marginTop: '8px', fontWeight: 500 }}>
-            crafted by <span style={{ color: 'var(--primary)', fontWeight: 700 }}>EPC IT Team</span>
+            crafted by <span className="glowing-team">EPC IT Team</span>
           </div>
         </div>
       </div>
