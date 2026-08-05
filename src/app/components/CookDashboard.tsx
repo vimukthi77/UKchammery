@@ -1,8 +1,7 @@
-'use/client';
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LogOut, Search, Printer, Download, RefreshCw, ClipboardList, Utensils } from 'lucide-react';
+import { LogOut, Search, Printer, Download, RefreshCw, ClipboardList, Utensils, Calendar } from 'lucide-react';
 
 interface CookDashboardProps {
   user: {
@@ -51,10 +50,10 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
       if (json.success) {
         setData(json.data);
       } else {
-        setError(json.message || 'Failed to load kitchen list');
+        setError(json.message || 'Failed to load requests');
       }
     } catch (err) {
-      setError('Connection error loading kitchen list');
+      setError('Connection error loading requests');
     } finally {
       setLoading(false);
     }
@@ -62,7 +61,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
   useEffect(() => {
     loadCookData();
-  }, [dateType, todayStr, searchQuery]);
+  }, [dateType, searchQuery, todayStr]);
 
   // Handle Download Kitchen Sheet
   const handleDownloadSheet = () => {
@@ -70,40 +69,35 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
     const targetDate = dateType === 'today' ? todayStr : tomorrowStr;
     const { totals, lists } = data;
     
-    let content = `UK-CHAMMERY KITCHEN REPORT\n`;
-    content += `Date: ${targetDate} (${dateType.toUpperCase()})\n`;
-    content += `========================================\n\n`;
+    let text = `UK-Chammery Kitchen Meal Requests Sheet\n`;
+    text += `Date: ${targetDate} (${dateType.toUpperCase()})\n`;
+    text += `========================================\n\n`;
     
-    content += `BREAKFAST (Total: ${totals.breakfast})\n`;
-    content += `----------------------------------------\n`;
-    if (lists.breakfast.length === 0) content += `No requests.\n`;
+    text += `Breakfast Orders (${totals.breakfast}):\n`;
     lists.breakfast.forEach((name: string, i: number) => {
-      content += `${i + 1}. ${name}\n`;
+      text += `${i + 1}. ${name}\n`;
     });
-    content += `\n`;
+    text += `\n`;
 
-    content += `LUNCH (Total: ${totals.lunch})\n`;
-    content += `----------------------------------------\n`;
-    if (lists.lunch.length === 0) content += `No requests.\n`;
+    text += `Lunch Orders (${totals.lunch}):\n`;
     lists.lunch.forEach((name: string, i: number) => {
-      content += `${i + 1}. ${name}\n`;
+      text += `${i + 1}. ${name}\n`;
     });
-    content += `\n`;
+    text += `\n`;
 
-    content += `DINNER (Total: ${totals.dinner})\n`;
-    content += `----------------------------------------\n`;
-    if (lists.dinner.length === 0) content += `No requests.\n`;
+    text += `Dinner Orders (${totals.dinner}):\n`;
     lists.dinner.forEach((name: string, i: number) => {
-      content += `${i + 1}. ${name}\n`;
+      text += `${i + 1}. ${name}\n`;
     });
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `kitchen-sheet-${targetDate}.txt`;
+    link.setAttribute('download', `kitchen-sheet-${targetDate}.txt`);
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
   };
 
   const handlePrint = () => {
@@ -158,7 +152,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
       <div className="navbar no-print">
         <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src="/uklogo.png" alt="Logo" style={{ height: '32px', width: 'auto' }} />
-          <span>UK-Chammery Kitchen 👨‍🍳</span>
+          <span>UK-Chammery Kitchen</span>
         </div>
         <div className="navbar-actions">
           <button 
@@ -184,20 +178,22 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
           <button 
             className={`tab ${dateType === 'today' ? 'tab-active' : ''}`}
             onClick={() => setDateType('today')}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
           >
-            📅 Today ({todayStr})
+            <Calendar size={16} /> Today ({todayStr})
           </button>
           <button 
             className={`tab ${dateType === 'tomorrow' ? 'tab-active' : ''}`}
             onClick={() => setDateType('tomorrow')}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
           >
-            📅 Tomorrow ({tomorrowStr})
+            <Calendar size={16} /> Tomorrow ({tomorrowStr})
           </button>
         </div>
 
         {/* Print Title (Only visible when printing) */}
         <div style={{ display: 'none' }} className="visible-print-block">
-          <h1 style={{ textAlign: 'center', margin: '20px 0 10px 0' }}>UK-Chammery Kitchen Report 🍳</h1>
+          <h1 style={{ textAlign: 'center', margin: '20px 0 10px 0' }}>UK-Chammery Kitchen Report</h1>
           <p style={{ textAlign: 'center', marginBottom: '20px' }}>
             Date: <strong>{dateType === 'today' ? todayStr : tomorrowStr}</strong> ({dateType.toUpperCase()})
           </p>
@@ -208,7 +204,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
           <div style={{ display: 'flex', position: 'relative', width: '100%' }}>
             <input
               type="text"
-              placeholder="🔍 Search staff names..."
+              placeholder="Search staff names..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ paddingLeft: '40px' }}
@@ -217,11 +213,11 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <button className="btn btn-secondary" onClick={handlePrint} style={{ padding: '10px' }}>
-              🖨️ Print List
+            <button className="btn btn-secondary" onClick={handlePrint} style={{ padding: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+              <Printer size={16} /> Print List
             </button>
-            <button className="btn btn-primary" onClick={handleDownloadSheet} style={{ padding: '10px' }}>
-              📥 Download TXT
+            <button className="btn btn-primary" onClick={handleDownloadSheet} style={{ padding: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+              <Download size={16} /> Download TXT
             </button>
           </div>
         </div>
@@ -229,20 +225,20 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
         {/* KPI Kitchen Count Grid */}
         {!loading && data && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }} className="no-print animate-slideup">
-            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#FFF8E7', border: '1px solid #FCD34D' }}>
-              <span style={{ fontSize: '1.75rem' }}>🍳</span>
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#FFF8E7', border: '1px solid #FCD34D', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#D97706' }} />
               <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Breakfast</span>
               <h3 style={{ fontSize: '1.5rem', color: '#D97706', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.breakfast}</h3>
             </div>
             
-            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7' }}>
-              <span style={{ fontSize: '1.75rem' }}>🍲</span>
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#059669' }} />
               <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Lunch</span>
               <h3 style={{ fontSize: '1.5rem', color: '#059669', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.lunch}</h3>
             </div>
             
-            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD' }}>
-              <span style={{ fontSize: '1.75rem' }}>🍽️</span>
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#2563EB' }} />
               <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Dinner</span>
               <h3 style={{ fontSize: '1.5rem', color: '#2563EB', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinner}</h3>
             </div>
@@ -260,7 +256,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               color: mealFilter === 'all' ? 'white' : '#374151'
             }}
           >
-            😋 All
+            All
           </button>
           <button 
             onClick={() => setMealFilter('breakfast')} 
@@ -271,7 +267,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               color: mealFilter === 'breakfast' ? 'white' : '#374151'
             }}
           >
-            🍳 Breakfast
+            Breakfast
           </button>
           <button 
             onClick={() => setMealFilter('lunch')} 
@@ -282,7 +278,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               color: mealFilter === 'lunch' ? 'white' : '#374151'
             }}
           >
-            🍲 Lunch
+            Lunch
           </button>
           <button 
             onClick={() => setMealFilter('dinner')} 
@@ -293,14 +289,14 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               color: mealFilter === 'dinner' ? 'white' : '#374151'
             }}
           >
-            🍽️ Dinner
+            Dinner
           </button>
         </div>
 
         {/* Loading Spinner */}
         {loading && (
           <div style={{ textAlign: 'center', padding: '30px', fontWeight: 'bold', color: 'var(--primary)' }} className="animate-slideup">
-            👨‍🍳 Fetching today's menu requests...
+            Fetching menu requests...
           </div>
         )}
 
@@ -312,7 +308,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               <div className="card kitchen-card-breakfast animate-slideup">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
                   <h3 style={{ fontSize: '1.1rem', color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍳 Breakfast Orders
+                    Breakfast Orders
                   </h3>
                   <span className="kitchen-badge" style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>
                     {data.totals.breakfast} orders
@@ -340,7 +336,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               <div className="card kitchen-card-lunch animate-slideup">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
                   <h3 style={{ fontSize: '1.1rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍲 Lunch Orders
+                    Lunch Orders
                   </h3>
                   <span className="kitchen-badge" style={{ backgroundColor: '#D1FAE5', color: '#059669' }}>
                     {data.totals.lunch} orders
@@ -368,7 +364,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               <div className="card kitchen-card-dinner animate-slideup">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
                   <h3 style={{ fontSize: '1.1rem', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍽️ Dinner Orders
+                    Dinner Orders
                   </h3>
                   <span className="kitchen-badge" style={{ backgroundColor: '#DBEAFE', color: '#2563EB' }}>
                     {data.totals.dinner} orders
