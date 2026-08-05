@@ -238,12 +238,6 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
               <h3 style={{ fontSize: '1.5rem', color: '#059669', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.lunch}</h3>
             </div>
             
-            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD', gap: '4px' }}>
-              <Utensils size={24} style={{ color: '#2563EB' }} />
-              <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Dinner (Office)</span>
-              <h3 style={{ fontSize: '1.5rem', color: '#2563EB', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinner}</h3>
-            </div>
-
             <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#F9FAFB', border: '1px solid #D1D5DB', gap: '4px' }}>
               <Utensils size={24} style={{ color: '#4B5563' }} />
               <span style={{ fontSize: '0.72rem', color: '#4B5563', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>UK Dinner</span>
@@ -389,7 +383,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
                     Dinner Orders
                   </h3>
                   <span className="kitchen-badge" style={{ backgroundColor: '#DBEAFE', color: '#2563EB' }}>
-                    {data.totals.dinner} orders
+                    {data.lists.dinner.length} orders
                   </span>
                 </div>
                 {data.lists.dinner.length === 0 ? (
