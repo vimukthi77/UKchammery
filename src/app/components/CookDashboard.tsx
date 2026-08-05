@@ -114,11 +114,51 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <style>{`
+        .animate-slideup {
+          animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .kitchen-card-breakfast {
+          border-left: 5px solid #F59E0B !important;
+          transition: var(--transition) !important;
+        }
+        .kitchen-card-breakfast:hover {
+          box-shadow: 0 12px 30px rgba(245, 158, 11, 0.12) !important;
+          transform: translateY(-2px);
+        }
+        .kitchen-card-lunch {
+          border-left: 5px solid #10B981 !important;
+          transition: var(--transition) !important;
+        }
+        .kitchen-card-lunch:hover {
+          box-shadow: 0 12px 30px rgba(16, 185, 129, 0.12) !important;
+          transform: translateY(-2px);
+        }
+        .kitchen-card-dinner {
+          border-left: 5px solid #3B82F6 !important;
+          transition: var(--transition) !important;
+        }
+        .kitchen-card-dinner:hover {
+          box-shadow: 0 12px 30px rgba(59, 130, 246, 0.12) !important;
+          transform: translateY(-2px);
+        }
+        .kitchen-badge {
+          font-weight: 800;
+          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 9999px;
+          text-transform: uppercase;
+        }
+      `}</style>
       {/* Top Navbar */}
       <div className="navbar no-print">
         <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src="/uklogo.png" alt="Logo" style={{ height: '32px', width: 'auto' }} />
-          <span>UK-Chammery Cook</span>
+          <span>UK-Chammery Kitchen 👨‍🍳</span>
         </div>
         <div className="navbar-actions">
           <button 
@@ -145,30 +185,30 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
             className={`tab ${dateType === 'today' ? 'tab-active' : ''}`}
             onClick={() => setDateType('today')}
           >
-            Today ({todayStr})
+            📅 Today ({todayStr})
           </button>
           <button 
             className={`tab ${dateType === 'tomorrow' ? 'tab-active' : ''}`}
             onClick={() => setDateType('tomorrow')}
           >
-            Tomorrow ({tomorrowStr})
+            📅 Tomorrow ({tomorrowStr})
           </button>
         </div>
 
         {/* Print Title (Only visible when printing) */}
         <div style={{ display: 'none' }} className="visible-print-block">
-          <h1 style={{ textAlign: 'center', margin: '20px 0 10px 0' }}>UK-Chammery Kitchen Report</h1>
+          <h1 style={{ textAlign: 'center', margin: '20px 0 10px 0' }}>UK-Chammery Kitchen Report 🍳</h1>
           <p style={{ textAlign: 'center', marginBottom: '20px' }}>
             Date: <strong>{dateType === 'today' ? todayStr : tomorrowStr}</strong> ({dateType.toUpperCase()})
           </p>
         </div>
 
         {/* Search and Action Row */}
-        <div className="card no-print" style={{ gap: '12px' }}>
+        <div className="card no-print animate-slideup" style={{ gap: '12px' }}>
           <div style={{ display: 'flex', position: 'relative', width: '100%' }}>
             <input
               type="text"
-              placeholder="Search staff names..."
+              placeholder="🔍 Search staff names..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ paddingLeft: '40px' }}
@@ -178,86 +218,89 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <button className="btn btn-secondary" onClick={handlePrint} style={{ padding: '10px' }}>
-              <Printer size={18} /> Print List
+              🖨️ Print List
             </button>
             <button className="btn btn-primary" onClick={handleDownloadSheet} style={{ padding: '10px' }}>
-              <Download size={18} /> Download TXT
+              📥 Download TXT
             </button>
           </div>
         </div>
 
+        {/* KPI Kitchen Count Grid */}
+        {!loading && data && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }} className="no-print animate-slideup">
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#FFF8E7', border: '1px solid #FCD34D' }}>
+              <span style={{ fontSize: '1.75rem' }}>🍳</span>
+              <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Breakfast</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#D97706', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.breakfast}</h3>
+            </div>
+            
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7' }}>
+              <span style={{ fontSize: '1.75rem' }}>🍲</span>
+              <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Lunch</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#059669', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.lunch}</h3>
+            </div>
+            
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD' }}>
+              <span style={{ fontSize: '1.75rem' }}>🍽️</span>
+              <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Dinner</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#2563EB', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinner}</h3>
+            </div>
+          </div>
+        )}
+
         {/* Meal Type Filter Pills (Breakfast, Lunch, Dinner, All) */}
-        <div className="no-print" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div className="no-print animate-slideup" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', marginTop: '4px' }}>
           <button 
             onClick={() => setMealFilter('all')} 
-            className="btn" 
+            className="tab" 
             style={{ 
               flex: 1, 
-              padding: '6px 12px', 
-              minHeight: '36px', 
-              borderRadius: '20px', 
-              fontSize: '0.8rem',
-              backgroundColor: mealFilter === 'all' ? 'var(--primary)' : 'var(--bg-card)',
-              color: mealFilter === 'all' ? 'white' : 'var(--primary)',
-              border: mealFilter === 'all' ? 'none' : '1px solid var(--border)'
+              backgroundColor: mealFilter === 'all' ? 'var(--accent)' : '#E5E7EB',
+              color: mealFilter === 'all' ? 'white' : '#374151'
             }}
           >
-            All
+            😋 All
           </button>
           <button 
             onClick={() => setMealFilter('breakfast')} 
-            className="btn" 
+            className="tab" 
             style={{ 
               flex: 1, 
-              padding: '6px 12px', 
-              minHeight: '36px', 
-              borderRadius: '20px', 
-              fontSize: '0.8rem',
-              backgroundColor: mealFilter === 'breakfast' ? 'var(--primary)' : 'var(--bg-card)',
-              color: mealFilter === 'breakfast' ? 'white' : 'var(--primary)',
-              border: mealFilter === 'breakfast' ? 'none' : '1px solid var(--border)'
+              backgroundColor: mealFilter === 'breakfast' ? 'var(--accent)' : '#E5E7EB',
+              color: mealFilter === 'breakfast' ? 'white' : '#374151'
             }}
           >
-            Breakfast
+            🍳 Breakfast
           </button>
           <button 
             onClick={() => setMealFilter('lunch')} 
-            className="btn" 
+            className="tab" 
             style={{ 
               flex: 1, 
-              padding: '6px 12px', 
-              minHeight: '36px', 
-              borderRadius: '20px', 
-              fontSize: '0.8rem',
-              backgroundColor: mealFilter === 'lunch' ? 'var(--primary)' : 'var(--bg-card)',
-              color: mealFilter === 'lunch' ? 'white' : 'var(--primary)',
-              border: mealFilter === 'lunch' ? 'none' : '1px solid var(--border)'
+              backgroundColor: mealFilter === 'lunch' ? 'var(--accent)' : '#E5E7EB',
+              color: mealFilter === 'lunch' ? 'white' : '#374151'
             }}
           >
-            Lunch
+            🍲 Lunch
           </button>
           <button 
             onClick={() => setMealFilter('dinner')} 
-            className="btn" 
+            className="tab" 
             style={{ 
               flex: 1, 
-              padding: '6px 12px', 
-              minHeight: '36px', 
-              borderRadius: '20px', 
-              fontSize: '0.8rem',
-              backgroundColor: mealFilter === 'dinner' ? 'var(--primary)' : 'var(--bg-card)',
-              color: mealFilter === 'dinner' ? 'white' : 'var(--primary)',
-              border: mealFilter === 'dinner' ? 'none' : '1px solid var(--border)'
+              backgroundColor: mealFilter === 'dinner' ? 'var(--accent)' : '#E5E7EB',
+              color: mealFilter === 'dinner' ? 'white' : '#374151'
             }}
           >
-            Dinner
+            🍽️ Dinner
           </button>
         </div>
 
         {/* Loading Spinner */}
         {loading && (
-          <div style={{ textAlign: 'center', padding: '30px', fontWeight: 'bold', color: 'var(--primary)' }}>
-            Retrieving meal requests...
+          <div style={{ textAlign: 'center', padding: '30px', fontWeight: 'bold', color: 'var(--primary)' }} className="animate-slideup">
+            👨‍🍳 Fetching today's menu requests...
           </div>
         )}
 
@@ -266,23 +309,23 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Breakfast Block */}
             {(mealFilter === 'all' || mealFilter === 'breakfast') && (
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>
-                  <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍳 Breakfast Requests
+              <div className="card kitchen-card-breakfast animate-slideup">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    🍳 Breakfast Orders
                   </h3>
-                  <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '3px 8px' }}>
+                  <span className="kitchen-badge" style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>
                     {data.totals.breakfast} orders
                   </span>
                 </div>
                 {data.lists.breakfast.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '12px', color: 'var(--muted)', fontSize: '0.85rem' }}>No breakfast orders.</p>
+                  <p style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)', fontSize: '0.85rem' }}>No breakfast orders registered.</p>
                 ) : (
-                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                     {data.lists.breakfast.map((name: string, index: number) => (
-                      <li key={`b-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa', borderRadius: 'var(--radius-sm)' }}>
-                        <span style={{ fontWeight: 600 }}>{name}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <li key={`b-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#FFFDF9', borderRadius: 'var(--radius-sm)' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--foreground)' }}>{name}</span>
+                        <span style={{ fontSize: '0.75rem', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                           <ClipboardList size={12} /> Breakfast
                         </span>
                       </li>
@@ -294,23 +337,23 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
             {/* Lunch Block */}
             {(mealFilter === 'all' || mealFilter === 'lunch') && (
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>
-                  <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍲 Lunch Requests
+              <div className="card kitchen-card-lunch animate-slideup">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    🍲 Lunch Orders
                   </h3>
-                  <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '3px 8px' }}>
+                  <span className="kitchen-badge" style={{ backgroundColor: '#D1FAE5', color: '#059669' }}>
                     {data.totals.lunch} orders
                   </span>
                 </div>
                 {data.lists.lunch.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '12px', color: 'var(--muted)', fontSize: '0.85rem' }}>No lunch orders.</p>
+                  <p style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)', fontSize: '0.85rem' }}>No lunch orders registered.</p>
                 ) : (
-                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                     {data.lists.lunch.map((name: string, index: number) => (
-                      <li key={`l-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa', borderRadius: 'var(--radius-sm)' }}>
-                        <span style={{ fontWeight: 600 }}>{name}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <li key={`l-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#F9FDFB', borderRadius: 'var(--radius-sm)' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--foreground)' }}>{name}</span>
+                        <span style={{ fontSize: '0.75rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                           <ClipboardList size={12} /> Lunch
                         </span>
                       </li>
@@ -322,23 +365,23 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
             {/* Dinner Block */}
             {(mealFilter === 'all' || mealFilter === 'dinner') && (
-              <div className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>
-                  <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    🍽️ Dinner Requests
+              <div className="card kitchen-card-dinner animate-slideup">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    🍽️ Dinner Orders
                   </h3>
-                  <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '3px 8px' }}>
+                  <span className="kitchen-badge" style={{ backgroundColor: '#DBEAFE', color: '#2563EB' }}>
                     {data.totals.dinner} orders
                   </span>
                 </div>
                 {data.lists.dinner.length === 0 ? (
-                  <p style={{ textAlign: 'center', padding: '12px', color: 'var(--muted)', fontSize: '0.85rem' }}>No dinner orders.</p>
+                  <p style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)', fontSize: '0.85rem' }}>No dinner orders registered.</p>
                 ) : (
-                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ul style={{ listStyle: 'none', paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                     {data.lists.dinner.map((name: string, index: number) => (
-                      <li key={`d-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa', borderRadius: 'var(--radius-sm)' }}>
-                        <span style={{ fontWeight: 600 }}>{name}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <li key={`d-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid #f3f4f6', backgroundColor: '#F9FBFF', borderRadius: 'var(--radius-sm)' }}>
+                        <span style={{ fontWeight: 700, color: 'var(--foreground)' }}>{name}</span>
+                        <span style={{ fontSize: '0.75rem', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                           <ClipboardList size={12} /> Dinner
                         </span>
                       </li>

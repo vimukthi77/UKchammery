@@ -250,7 +250,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
     );
   }
 
-  const { today, currentMonth, cutoffTimes, monthlyStats, meals, history, payment } = data;
+  const { today, currentMonth, cutoffTimes, monthlyStats, meals, history, payment, paymentHistory } = data;
   const tomorrowStr = meals.tomorrow.date;
 
   const todayDateObj = new Date(today);
@@ -914,6 +914,56 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
                 {passwordLoading ? 'Updating password...' : 'Update Password'}
               </button>
             </form>
+
+            {/* Top-up / Payment History Card */}
+            <div className="card">
+              <h3 style={{ fontSize: '1.15rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Coins size={20} /> Payment & Top-up History
+              </h3>
+              
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '4px' }}>
+                Your registered payments and wallet top-up records.
+              </p>
+
+              <div className="table-container" style={{ marginTop: '8px' }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Billing Month</th>
+                      <th style={{ textAlign: 'right' }}>Amount (Rs.)</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!paymentHistory || paymentHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px' }}>
+                          No payment records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      paymentHistory.map((p: any) => (
+                        <tr key={p._id}>
+                          <td style={{ fontWeight: 600 }}>{p.date}</td>
+                          <td>{p.month}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: 'var(--success)' }}>
+                            Rs. {p.amount.toLocaleString()}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className={`badge ${p.status === 'paid' ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '0.65rem' }}>
+                              {p.status}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{p.notes || '-'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -61,8 +61,9 @@ export async function GET(request: NextRequest) {
       userPointsUsed += m.points;
     });
 
-    // 6. Fetch user's payment for the current month
+    // 6. Fetch user's payment for the current month and payment history
     const payment = await Payment.findOne({ userId, month: currentMonth });
+    const paymentHistory = await Payment.find({ userId }).sort({ createdAt: -1 });
 
     // 7. Check if month is finalized
     const monthlySummary = await MonthlySummary.findOne({ month: currentMonth });
@@ -128,6 +129,14 @@ export async function GET(request: NextRequest) {
           isFinalized
         },
         payment: payment ? { amount: payment.amount, status: payment.status } : null,
+        paymentHistory: paymentHistory.map(p => ({
+          _id: p._id,
+          amount: p.amount,
+          month: p.month,
+          status: p.status,
+          notes: p.notes,
+          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : p.month
+        })),
         history
       }
     });

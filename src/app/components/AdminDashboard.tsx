@@ -50,6 +50,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const [showAddPayment, setShowAddPayment] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [finalizeConfirm, setFinalizeConfirm] = useState(false);
+  const [showPendingPaymentsModal, setShowPendingPaymentsModal] = useState(false);
+  const [showDueBalancesModal, setShowDueBalancesModal] = useState(false);
 
   // Expanded User Points logs
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -611,12 +613,36 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 <h3 style={{ fontSize: '1.4rem', color: 'var(--primary)' }}>Rs. {stats.estimatedPointPrice.toFixed(2)}</h3>
               </div>
 
-              <div className="card" style={{ padding: '14px', gap: '4px' }}>
+              <div 
+                className="card" 
+                style={{ padding: '14px', gap: '4px', cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }} 
+                onClick={() => setShowPendingPaymentsModal(true)}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+              >
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Pending Payments</span>
                 <h3 style={{ fontSize: '1.4rem', color: 'var(--warning)' }}>{stats.pendingPayments} users</h3>
               </div>
 
-              <div className="card" style={{ padding: '14px', gap: '4px' }}>
+              <div 
+                className="card" 
+                style={{ padding: '14px', gap: '4px', cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }} 
+                onClick={() => setShowDueBalancesModal(true)}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+              >
                 <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Due Wallet Balances</span>
                 <h3 style={{ fontSize: '1.4rem', color: 'var(--error)' }}>{stats.usersWithDueBalances} users</h3>
               </div>
@@ -1633,6 +1659,118 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
           </button>
         </div>
       </div>
+
+      {/* Modals: Pending Payments and Due Wallet Balances */}
+      {showPendingPaymentsModal && (() => {
+        const paidUserIds = paymentsList
+          .filter(p => p.month === currentMonthStr && p.status === 'paid')
+          .map(p => p.userId);
+        const pendingPaymentUsers = usersList.filter(u => 
+          u.role === 'user' && 
+          u.status === 'active' && 
+          !paidUserIds.includes(u._id)
+        );
+        return (
+          <div className="modal-overlay" onClick={() => setShowPendingPaymentsModal(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <h3 style={{ fontSize: '1.25rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={20} style={{ color: 'var(--warning)' }} /> Pending Payments
+              </h3>
+              
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px', textAlign: 'left' }}>
+                Active staff who have not registered their payment for <strong>{currentMonthStr}</strong>.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto', margin: '8px 0', width: '100%' }}>
+                {pendingPaymentUsers.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px' }}>No pending payments this month!</p>
+                ) : (
+                  pendingPaymentUsers.map(u => (
+                    <div key={u._id} style={{ 
+                      padding: '12px', 
+                      borderRadius: 'var(--radius-sm)', 
+                      border: '1.5px solid var(--border)', 
+                      backgroundColor: 'var(--bg-light)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>{u.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{u.email}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Current Balance</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: u.balance < 0 ? 'var(--error)' : 'var(--foreground)' }}>
+                          Rs. {u.balance.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <button className="btn btn-secondary" onClick={() => setShowPendingPaymentsModal(false)} style={{ width: '100%', marginTop: '8px' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {showDueBalancesModal && (() => {
+        const dueBalanceUsers = usersList.filter(u => 
+          u.role === 'user' && 
+          u.status === 'active' && 
+          u.balance <= 0
+        );
+        return (
+          <div className="modal-overlay" onClick={() => setShowDueBalancesModal(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <h3 style={{ fontSize: '1.25rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertCircle size={20} style={{ color: 'var(--error)' }} /> Due Wallet Balances
+              </h3>
+              
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px', textAlign: 'left' }}>
+                Active staff whose wallet balances are negative or zero (dues).
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '350px', overflowY: 'auto', margin: '8px 0', width: '100%' }}>
+                {dueBalanceUsers.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px' }}>No outstanding dues!</p>
+                ) : (
+                  dueBalanceUsers.map(u => (
+                    <div key={u._id} style={{ 
+                      padding: '12px', 
+                      borderRadius: 'var(--radius-sm)', 
+                      border: '1.5px solid var(--border)', 
+                      backgroundColor: 'var(--bg-light)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>{u.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{u.email}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--error)' }}>Due Amount</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--error)' }}>
+                          Rs. {u.balance.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <button className="btn btn-secondary" onClick={() => setShowDueBalancesModal(false)} style={{ width: '100%', marginTop: '8px' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
