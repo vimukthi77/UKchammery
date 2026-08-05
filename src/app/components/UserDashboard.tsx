@@ -22,8 +22,9 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
   const [toggleLoading, setToggleLoading] = useState(false);
   
   // Navigation State
-  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications' | 'settings'>('order');
+  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications' | 'payments'>('order');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   // Change Password Form States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -43,7 +44,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
       case 'report': return 1;
       case 'order': return 2;
       case 'notifications': return 3;
-      case 'settings': return 4;
+      case 'payments': return 4;
       default: return 2;
     }
   };
@@ -353,7 +354,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
                   <div style={{ fontSize: '0.72rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
                 </div>
                 <button 
-                  onClick={() => { setActiveSection('settings'); setShowProfileMenu(false); }}
+                  onClick={() => { setShowChangePasswordModal(true); setShowProfileMenu(false); }}
                   className="btn" 
                   style={{ 
                     justifyContent: 'flex-start', 
@@ -841,81 +842,9 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
           </div>
         )}
 
-        {/* Settings Section (Change Password) */}
-        {activeSection === 'settings' && (
+        {/* Payments Section (Payment & Top-up History) */}
+        {activeSection === 'payments' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <form className="card" onSubmit={handleChangePassword}>
-              <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Settings size={20} /> Account Settings
-              </h3>
-              
-              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '4px' }}>
-                Manage your credentials and change your password.
-              </p>
-
-              {passwordError && (
-                <div className="alert alert-error" style={{ padding: '10px 14px' }}>
-                  <AlertCircle size={16} />
-                  <span style={{ fontSize: '0.82rem' }}>{passwordError}</span>
-                </div>
-              )}
-
-              {passwordSuccess && (
-                <div className="alert alert-success" style={{ padding: '10px 14px' }}>
-                  <Check size={16} style={{ color: 'var(--success)' }} />
-                  <span style={{ fontSize: '0.82rem' }}>{passwordSuccess}</span>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Current Password</label>
-                  <input 
-                    type="password" 
-                    value={currentPassword} 
-                    onChange={e => setCurrentPassword(e.target.value)} 
-                    placeholder="Enter current password" 
-                    required 
-                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>New Password</label>
-                  <input 
-                    type="password" 
-                    value={newPassword} 
-                    onChange={e => setNewPassword(e.target.value)} 
-                    placeholder="Enter new password" 
-                    required 
-                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Confirm New Password</label>
-                  <input 
-                    type="password" 
-                    value={confirmPassword} 
-                    onChange={e => setConfirmPassword(e.target.value)} 
-                    placeholder="Confirm new password" 
-                    required 
-                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
-                  />
-                </div>
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                disabled={passwordLoading} 
-                style={{ width: '100%', marginTop: '12px' }}
-              >
-                {passwordLoading ? 'Updating password...' : 'Update Password'}
-              </button>
-            </form>
-
-            {/* Top-up / Payment History Card */}
             <div className="card">
               <h3 style={{ fontSize: '1.15rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Coins size={20} /> Payment & Top-up History
@@ -1112,10 +1041,10 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
             {activeSection !== 'notifications' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Alerts</span>}
           </button>
 
-          {/* Item 5: Settings */}
+          {/* Item 5: Payments */}
           <button 
             className="bottom-nav-item"
-            onClick={() => setActiveSection('settings')}
+            onClick={() => setActiveSection('payments')}
             style={{ 
               flex: 1, 
               height: '100%', 
@@ -1126,15 +1055,146 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
               gap: '2px', 
               border: 'none', 
               background: 'transparent', 
-              color: activeSection === 'settings' ? '#ffffff' : 'var(--muted)',
+              color: activeSection === 'payments' ? '#ffffff' : 'var(--muted)',
               transition: 'color 0.25s ease'
             }}
           >
-            <Settings size={20} />
-            {activeSection !== 'settings' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Settings</span>}
+            <Coins size={20} />
+            {activeSection !== 'payments' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Payments</span>}
           </button>
         </div>
       </div>
+
+      {/* Modal: Change Password */}
+      {showChangePasswordModal && (
+        <div className="modal-overlay" onClick={() => {
+          setShowChangePasswordModal(false);
+          setPasswordError('');
+          setPasswordSuccess('');
+        }} style={{ zIndex: 1100 }}>
+          <div className="modal-content animate-slideup" onClick={e => e.stopPropagation()} style={{ width: '90%', maxWidth: '400px', padding: '24px' }}>
+            <h3 style={{ fontSize: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Settings size={20} style={{ color: 'var(--primary)' }} /> Change Password
+            </h3>
+            
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '12px', textAlign: 'left' }}>
+              Manage your credentials and update your password.
+            </p>
+
+            {passwordError && (
+              <div className="alert alert-error" style={{ padding: '10px 14px', marginBottom: '12px' }}>
+                <AlertCircle size={16} />
+                <span style={{ fontSize: '0.82rem' }}>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="alert alert-success" style={{ padding: '10px 14px', marginBottom: '12px' }}>
+                <Check size={16} style={{ color: 'var(--success)' }} />
+                <span style={{ fontSize: '0.82rem' }}>{passwordSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setPasswordError('');
+              setPasswordSuccess('');
+
+              if (newPassword !== confirmPassword) {
+                setPasswordError('New passwords do not match');
+                return;
+              }
+
+              setPasswordLoading(true);
+              try {
+                const res = await fetch('/api/user/change-password', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const json = await res.json();
+                if (json.success) {
+                  setPasswordSuccess('Your password has been successfully updated.');
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setTimeout(() => {
+                    setShowChangePasswordModal(false);
+                    setPasswordSuccess('');
+                  }, 2000);
+                } else {
+                  setPasswordError(json.message || 'Failed to update password');
+                }
+              } catch (err) {
+                setPasswordError('Connection error updating password');
+              } finally {
+                setPasswordLoading(false);
+              }
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Current Password</label>
+                  <input 
+                    type="password" 
+                    value={currentPassword} 
+                    onChange={e => setCurrentPassword(e.target.value)} 
+                    placeholder="Enter current password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>New Password</label>
+                  <input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={e => setNewPassword(e.target.value)} 
+                    placeholder="Enter new password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Confirm New Password</label>
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)} 
+                    placeholder="Confirm new password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => {
+                    setShowChangePasswordModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                  }} 
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={passwordLoading} 
+                  style={{ flex: 1 }}
+                >
+                  {passwordLoading ? 'Updating...' : 'Update'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

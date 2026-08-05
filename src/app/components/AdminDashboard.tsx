@@ -277,6 +277,33 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     }
   };
 
+  // Manage Users: Delete User
+  const handleDeleteUser = async () => {
+    if (!editingUser) return;
+    const confirmDelete = window.confirm(`Are you absolutely sure you want to permanently delete user account "${editingUser.name}"? This will delete all of their logged meal requests and payments history!`);
+    if (!confirmDelete) return;
+
+    setActionLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/admin/users?userId=${editingUser._id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        flashSuccess('User account and associated records deleted successfully');
+        setEditingUser(null);
+        await loadAllAdminData();
+      } else {
+        flashError(data.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      flashError('Server error deleting user');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Manage Payments: Add Payment
   const handleAddPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -626,7 +653,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   e.currentTarget.style.boxShadow = 'var(--shadow-md)';
                 }}
               >
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Pending Payments</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>This Month</span>
                 <h3 style={{ fontSize: '1.4rem', color: 'var(--warning)' }}>{stats.pendingPayments} users</h3>
               </div>
 
@@ -906,11 +933,24 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</button>
-                    <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ flex: 1 }}>
-                      {actionLoading ? 'Updating...' : 'Save Changes'}
-                    </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setEditingUser(null)} style={{ flex: 1 }}>Cancel</button>
+                      <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ flex: 1 }}>
+                        {actionLoading ? 'Updating...' : 'Save Changes'}
+                      </button>
+                    </div>
+                    {editingUser._id !== user.userId && (
+                      <button 
+                        type="button" 
+                        className="btn btn-danger" 
+                        disabled={actionLoading}
+                        onClick={handleDeleteUser}
+                        style={{ width: '100%', minHeight: '38px', backgroundColor: 'var(--error)', color: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', border: 'none', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        Delete User Account
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
@@ -1664,7 +1704,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
       {showPendingPaymentsModal && (() => {
         const paidUserIds = paymentsList
           .filter(p => p.month === currentMonthStr && p.status === 'paid')
-          .map(p => p.userId);
+          .map(p => p.userId?._id || p.userId);
         const pendingPaymentUsers = usersList.filter(u => 
           u.role === 'user' && 
           u.status === 'active' && 
@@ -1672,9 +1712,9 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         );
         return (
           <div className="modal-overlay" onClick={() => setShowPendingPaymentsModal(false)}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content animate-slideup" onClick={e => e.stopPropagation()}>
               <h3 style={{ fontSize: '1.25rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={20} style={{ color: 'var(--warning)' }} /> Pending Payments
+                <Clock size={20} style={{ color: 'var(--warning)' }} /> This Month
               </h3>
               
               <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px', textAlign: 'left' }}>
@@ -1687,7 +1727,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                 ) : (
                   pendingPaymentUsers.map(u => (
                     <div key={u._id} style={{ 
-                      padding: '12px', 
+                      padding: '12px 16px', 
                       borderRadius: 'var(--radius-sm)', 
                       border: '1.5px solid var(--border)', 
                       backgroundColor: 'var(--bg-light)',
@@ -1695,15 +1735,14 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
-                      <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary)' }}>{u.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{u.email}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--foreground)' }}>
+                        👤 {u.name}
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Current Balance</div>
-                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: u.balance < 0 ? 'var(--error)' : 'var(--foreground)' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)', marginRight: '6px' }}>Balance:</span>
+                        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: u.balance < 0 ? 'var(--error)' : 'var(--success)' }}>
                           Rs. {u.balance.toLocaleString()}
-                        </div>
+                        </span>
                       </div>
                     </div>
                   ))

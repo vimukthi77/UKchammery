@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import HistoryLog from '@/models/HistoryLog';
 import MealRequest from '@/models/MealRequest';
+import Payment from '@/models/Payment';
 import { hashPassword } from '@/lib/auth';
 import { getLocalTodayStr, getMonthStr } from '@/lib/dateUtils';
 
@@ -165,6 +166,44 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Admin user update error:', error);
+    return NextResponse.json({ success: false, message: error.message || 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await dbConnect();
+    const adminId = request.headers.get('x-user-id') as string;
+    
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ success: false, message: 'Missing userId' }, { status: 400 });
+    }
+
+    const userToDelete = await User.findById(userId);
+    if (!userToDelete) {
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+    }
+
+    if (userId === adminId) {
+      return NextResponse.json({ success: false, message: 'Cannot delete your own administrator account' }, { status: 400 });
+    }
+
+    await User.findByIdAndDelete(userId);
+    await MealRequest.deleteMany({ userId });
+    await Payment.deleteMany({ userId });
+
+    await HistoryLog.create({
+      userId: adminId,
+      action: 'Delete User',
+      details: `Deleted user ${userToDelete.name} (${userToDelete.email})`
+    });
+
+    return NextResponse.json({ success: true, message: 'User deleted successfully' });
+  } catch (error: any) {
+    console.error('Admin user delete error:', error);
     return NextResponse.json({ success: false, message: error.message || 'Server error' }, { status: 500 });
   }
 }
