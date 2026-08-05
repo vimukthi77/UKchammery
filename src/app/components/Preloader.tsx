@@ -18,201 +18,89 @@ export default function Preloader({ message = 'Loading...' }: PreloaderProps) {
       position: 'fixed',
       top: 0,
       left: 0,
-      backgroundColor: '#fafafa',
+      backgroundColor: '#ffffff',
       zIndex: 9999,
-      gap: '16px',
+      gap: '20px',
       fontFamily: 'var(--font-sans), sans-serif'
     }}>
       <style>{`
-        .preloader-circle-bg {
-          width: 110px;
-          height: 110px;
-          border-radius: 50%;
-          background: #ffffff;
-          border: 1px solid rgba(6, 78, 59, 0.06);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+        .loader-wrapper {
+          position: relative;
+          width: 90px;
+          height: 90px;
           display: flex;
           align-items: center;
           justifyContent: center;
-          position: relative;
-          margin-bottom: 4px;
         }
 
-        /* Minimal plate curve drawing */
-        .plate-svg {
+        .brand-logo-pulse {
+          width: 52px;
+          height: 52px;
+          object-fit: contain;
+          animation: logo-breathe 2s ease-in-out infinite;
+          z-index: 2;
+        }
+
+        .spinner-ring {
           position: absolute;
-          bottom: 24px;
-          left: 50%;
-          transform: translateX(-50%);
-          opacity: 0.85;
-        }
-
-        /* Abstract professional drops */
-        .food-item {
-          position: absolute;
-          opacity: 0;
-        }
-
-        .food-capsule {
-          width: 12px;
-          height: 6px;
-          border-radius: 3px;
-          background-color: var(--accent); /* warm gold */
-          animation: drop-rotate 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-          left: 36px;
-          top: 24px;
-        }
-
-        .food-dot {
-          width: 7px;
-          height: 7px;
+          width: 82px;
+          height: 82px;
           border-radius: 50%;
-          background-color: var(--primary); /* forest green */
-          animation: drop-straight 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite 0.6s;
-          left: 50px;
-          top: 26px;
+          border: 2.5px solid rgba(6, 78, 59, 0.05);
+          z-index: 1;
         }
 
-        .food-leaf {
-          width: 8px;
-          height: 8px;
-          border-radius: 6px 0;
-          background-color: #10B981; /* emerald green */
-          transform: rotate(-45deg);
-          animation: drop-leaf 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite 1.2s;
-          left: 60px;
-          top: 22px;
-        }
-
-        /* Landing Ripples */
-        .ripple {
+        .spinner-active {
           position: absolute;
-          bottom: 27px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 6px;
-          height: 2px;
+          width: 82px;
+          height: 82px;
           border-radius: 50%;
-          border: 1.5px solid var(--accent);
-          opacity: 0;
-        }
-        .ripple-1 {
-          animation: ripple-out 2.2s ease-out infinite 0.4s;
-        }
-        .ripple-2 {
-          animation: ripple-out 2.2s ease-out infinite 1.0s;
-        }
-        .ripple-3 {
-          animation: ripple-out 2.2s ease-out infinite 1.6s;
+          border: 2.5px solid transparent;
+          border-top-color: var(--primary);
+          border-right-color: var(--accent);
+          animation: spin-loader 1.2s cubic-bezier(0.5, 0.15, 0.5, 0.85) infinite;
+          z-index: 1;
         }
 
-        @keyframes drop-rotate {
-          0% {
-            transform: translateY(-40px) rotate(-30deg) scale(0.3);
-            opacity: 0;
-          }
-          15% {
-            opacity: 1;
-          }
-          40%, 80% {
-            transform: translateY(32px) rotate(15deg) scale(1);
-            opacity: 1;
-          }
-          95%, 100% {
-            transform: translateY(32px) rotate(15deg) scale(0.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes drop-straight {
-          0% {
-            transform: translateY(-40px) scale(0.3);
-            opacity: 0;
-          }
-          15% {
-            opacity: 1;
-          }
-          40%, 80% {
-            transform: translateY(30px) scale(1);
-            opacity: 1;
-          }
-          95%, 100% {
-            transform: translateY(30px) scale(0.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes drop-leaf {
-          0% {
-            transform: translateY(-40px) rotate(-60deg) scale(0.3);
-            opacity: 0;
-          }
-          15% {
-            opacity: 1;
-          }
-          40%, 80% {
-            transform: translateY(34px) rotate(-15deg) scale(1);
-            opacity: 1;
-          }
-          95%, 100% {
-            transform: translateY(34px) rotate(-15deg) scale(0.8);
-            opacity: 0;
-          }
-        }
-
-        @keyframes ripple-out {
-          0% {
-            width: 6px;
-            height: 2px;
-            opacity: 0;
-          }
-          5% {
-            opacity: 0.8;
-          }
-          20% {
-            width: 44px;
-            height: 8px;
-            opacity: 0;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-
-        .preloader-text-modern {
+        .preloader-status-text {
           font-size: 0.72rem;
           color: var(--primary);
           font-weight: 700;
-          letter-spacing: 0.18em;
+          letter-spacing: 0.22em;
           text-transform: uppercase;
-          animation: pulse-opacity 1.8s ease-in-out infinite;
+          opacity: 0.8;
+          animation: text-pulse 2s ease-in-out infinite;
         }
 
-        @keyframes pulse-opacity {
-          0%, 100% { opacity: 0.65; }
+        @keyframes spin-loader {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        @keyframes logo-breathe {
+          0%, 100% {
+            transform: scale(0.94);
+            filter: drop-shadow(0 2px 4px rgba(6, 78, 59, 0.04));
+          }
+          50% {
+            transform: scale(1.04);
+            filter: drop-shadow(0 6px 14px rgba(6, 78, 59, 0.12));
+          }
+        }
+
+        @keyframes text-pulse {
+          0%, 100% { opacity: 0.6; }
           50% { opacity: 1; }
         }
       `}</style>
 
-      <div className="preloader-circle-bg">
-        {/* Sleek plate curve */}
-        <svg className="plate-svg" width="56" height="12" viewBox="0 0 56 12">
-          <path d="M 4,2 Q 28,11 52,2" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M 12,5 Q 28,10 44,5" fill="none" stroke="var(--accent)" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
-        </svg>
-
-        {/* Dynamic drop ripples */}
-        <div className="ripple ripple-1" />
-        <div className="ripple ripple-2" />
-        <div className="ripple ripple-3" />
-
-        {/* Dropping modern ingredients */}
-        <div className="food-item food-capsule" />
-        <div className="food-item food-dot" />
-        <div className="food-item food-leaf" />
+      <div className="loader-wrapper">
+        <div className="spinner-ring" />
+        <div className="spinner-active" />
+        <img className="brand-logo-pulse" src="/uklogo.png" alt="UK-Chammery" />
       </div>
 
-      <div className="preloader-text-modern">{message}</div>
+      <div className="preloader-status-text">{message}</div>
     </div>
   );
 }

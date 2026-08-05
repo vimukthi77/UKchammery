@@ -674,31 +674,128 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
 
             {/* Daily Meal Breakdown */}
             <div className="card">
-              <h3 style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>Current Month Requests</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 10px', textAlign: 'center', marginTop: '6px' }}>
-                <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Breakfasts</span>
-                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.breakfastRequests}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Lunches</span>
-                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.lunchRequests}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Total Dinners</span>
-                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.dinnerRequests}</span>
-                </div>
-                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>UK Dinner</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerUKRequests || 0}</span>
-                </div>
-                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>UK2 Dinner</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerUK2Requests || 0}</span>
-                </div>
-                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>Kadana Dinner</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerKadanaRequests || 0}</span>
+              <h3 style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '6px', marginBottom: '12px' }}>Current Month Requests</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', gap: '16px', flexWrap: 'wrap' }}>
+                {/* SVG Donut Chart */}
+                {(() => {
+                  const b = stats.breakfastRequests || 0;
+                  const l = stats.lunchRequests || 0;
+                  const d = stats.dinnerRequests || 0;
+                  const total = b + l + d;
+                  
+                  if (total === 0) {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="30" fill="none" stroke="#e5e7eb" strokeWidth="14" />
+                        </svg>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>No requests logged</span>
+                      </div>
+                    );
+                  }
+
+                  const bPercent = b / total;
+                  const lPercent = l / total;
+                  const dPercent = d / total;
+
+                  // Circle radius = 30, circumference = 188.5
+                  const circ = 188.5;
+                  const bStroke = bPercent * circ;
+                  const lStroke = lPercent * circ;
+                  const dStroke = dPercent * circ;
+
+                  // Slices offsets
+                  const bOffset = 0;
+                  const lOffset = -bStroke;
+                  const dOffset = -(bStroke + lStroke);
+
+                  return (
+                    <div style={{ position: 'relative', width: '100px', height: '100px' }}>
+                      <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                        {/* Breakfast (Gold) */}
+                        {b > 0 && (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="30"
+                            fill="none"
+                            stroke="var(--accent)"
+                            strokeWidth="14"
+                            strokeDasharray={`${bStroke} ${circ}`}
+                            strokeDashoffset={bOffset}
+                            style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                          />
+                        )}
+                        {/* Lunch (Forest Green) */}
+                        {l > 0 && (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="30"
+                            fill="none"
+                            stroke="var(--primary)"
+                            strokeWidth="14"
+                            strokeDasharray={`${lStroke} ${circ}`}
+                            strokeDashoffset={lOffset}
+                            style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                          />
+                        )}
+                        {/* Dinner (Emerald Green) */}
+                        {d > 0 && (
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="30"
+                            fill="none"
+                            stroke="#10B981"
+                            strokeWidth="14"
+                            strokeDasharray={`${dStroke} ${circ}`}
+                            strokeDashoffset={dOffset}
+                            style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                          />
+                        )}
+                      </svg>
+                      {/* Center text showing total requests */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--foreground)' }}>{total}</span>
+                        <span style={{ fontSize: '0.55rem', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase' }}>Orders</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Legend & Stats Details */}
+                <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', textAlign: 'center' }}>
+                    <div style={{ backgroundColor: '#FFFDF5', border: '1px solid #FEF3C7', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block', fontWeight: 600 }}>Breakfast</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent)' }}>{stats.breakfastRequests}</span>
+                    </div>
+                    <div style={{ backgroundColor: '#F9FDFB', border: '1px solid #D1FAE5', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block', fontWeight: 600 }}>Lunch</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>{stats.lunchRequests}</span>
+                    </div>
+                    <div style={{ backgroundColor: '#F9FBFF', border: '1px solid #DBEAFE', padding: '6px', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block', fontWeight: 600 }}>Dinner</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#10B981' }}>{stats.dinnerRequests}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'space-between', borderTop: '1px solid #f3f4f6', paddingTop: '6px', fontSize: '0.72rem', color: 'var(--muted)' }}>
+                    <span>UK: <strong>{stats.dinnerUKRequests || 0}</strong></span>
+                    <span>UK2: <strong>{stats.dinnerUK2Requests || 0}</strong></span>
+                    <span>Kadana: <strong>{stats.dinnerKadanaRequests || 0}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
