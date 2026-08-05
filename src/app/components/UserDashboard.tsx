@@ -1,8 +1,7 @@
-'use/client';
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText } from 'lucide-react';
+import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings } from 'lucide-react';
 
 interface UserDashboardProps {
   user: {
@@ -23,7 +22,16 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
   const [toggleLoading, setToggleLoading] = useState(false);
   
   // Navigation State
-  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications'>('order');
+  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications' | 'settings'>('order');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Change Password Form States
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Notification States
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -35,6 +43,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
       case 'report': return 1;
       case 'order': return 2;
       case 'notifications': return 3;
+      case 'settings': return 4;
       default: return 2;
     }
   };
@@ -199,6 +208,40 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
     return false;
   };
 
+  // Handle Password Update Form Submit
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setPasswordSuccess('Your password has been successfully updated.');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordError(json.message || 'Failed to update password');
+      }
+    } catch (err) {
+      setPasswordError('Connection error updating password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--primary)', fontWeight: 'bold' }}>
@@ -262,14 +305,90 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
           <img src="/uklogo.png" alt="Logo" style={{ height: '32px', width: 'auto' }} />
           <span>UK-Chammery</span>
         </div>
-        <div className="navbar-actions">
-          <button 
-            onClick={onLogout} 
-            className="btn btn-secondary" 
-            style={{ minWidth: '40px', padding: '8px', minHeight: '40px', border: 'none', color: 'var(--error)' }}
+        <div className="navbar-actions" style={{ position: 'relative' }}>
+          <div 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--primary)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-sm)',
+              fontSize: '0.9rem',
+              userSelect: 'none'
+            }}
           >
-            <LogOut size={20} />
-          </button>
+            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+          </div>
+
+          {showProfileMenu && (
+            <>
+              <div 
+                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }} 
+                onClick={() => setShowProfileMenu(false)} 
+              />
+              <div style={{
+                position: 'absolute',
+                top: '46px',
+                right: 0,
+                backgroundColor: '#ffffff',
+                borderRadius: 'var(--radius-sm)',
+                border: '1.5px solid var(--border)',
+                boxShadow: 'var(--shadow-lg)',
+                padding: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                minWidth: '170px',
+                zIndex: 999
+              }}>
+                <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)', marginBottom: '4px', textAlign: 'left' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary)' }}>{user.name}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+                </div>
+                <button 
+                  onClick={() => { setActiveSection('settings'); setShowProfileMenu(false); }}
+                  className="btn" 
+                  style={{ 
+                    justifyContent: 'flex-start', 
+                    minHeight: '36px', 
+                    padding: '6px 12px', 
+                    fontSize: '0.85rem', 
+                    backgroundColor: 'transparent',
+                    color: 'var(--foreground)',
+                    boxShadow: 'none',
+                    borderRadius: '6px',
+                    width: '100%'
+                  }}
+                >
+                  <Settings size={16} /> Change Password
+                </button>
+                <button 
+                  onClick={() => { onLogout(); setShowProfileMenu(false); }}
+                  className="btn" 
+                  style={{ 
+                    justifyContent: 'flex-start', 
+                    minHeight: '36px', 
+                    padding: '6px 12px', 
+                    fontSize: '0.85rem', 
+                    backgroundColor: 'transparent',
+                    color: 'var(--error)',
+                    boxShadow: 'none',
+                    borderRadius: '6px',
+                    width: '100%'
+                  }}
+                >
+                  <LogOut size={16} /> Logout
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -721,6 +840,82 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
             </div>
           </div>
         )}
+
+        {/* Settings Section (Change Password) */}
+        {activeSection === 'settings' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form className="card" onSubmit={handleChangePassword}>
+              <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Settings size={20} /> Account Settings
+              </h3>
+              
+              <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '4px' }}>
+                Manage your credentials and change your password.
+              </p>
+
+              {passwordError && (
+                <div className="alert alert-error" style={{ padding: '10px 14px' }}>
+                  <AlertCircle size={16} />
+                  <span style={{ fontSize: '0.82rem' }}>{passwordError}</span>
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="alert alert-success" style={{ padding: '10px 14px' }}>
+                  <Check size={16} style={{ color: 'var(--success)' }} />
+                  <span style={{ fontSize: '0.82rem' }}>{passwordSuccess}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Current Password</label>
+                  <input 
+                    type="password" 
+                    value={currentPassword} 
+                    onChange={e => setCurrentPassword(e.target.value)} 
+                    placeholder="Enter current password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>New Password</label>
+                  <input 
+                    type="password" 
+                    value={newPassword} 
+                    onChange={e => setNewPassword(e.target.value)} 
+                    placeholder="Enter new password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Confirm New Password</label>
+                  <input 
+                    type="password" 
+                    value={confirmPassword} 
+                    onChange={e => setConfirmPassword(e.target.value)} 
+                    placeholder="Confirm new password" 
+                    required 
+                    style={{ borderRadius: '9999px', padding: '12px 16px' }}
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                disabled={passwordLoading} 
+                style={{ width: '100%', marginTop: '12px' }}
+              >
+                {passwordLoading ? 'Updating password...' : 'Update Password'}
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Bottom Tab Navigation Bar */}
@@ -867,10 +1062,10 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
             {activeSection !== 'notifications' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Alerts</span>}
           </button>
 
-          {/* Item 5: Logout */}
+          {/* Item 5: Settings */}
           <button 
             className="bottom-nav-item"
-            onClick={onLogout}
+            onClick={() => setActiveSection('settings')}
             style={{ 
               flex: 1, 
               height: '100%', 
@@ -881,11 +1076,12 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
               gap: '2px', 
               border: 'none', 
               background: 'transparent', 
-              color: 'var(--error)' 
+              color: activeSection === 'settings' ? '#ffffff' : 'var(--muted)',
+              transition: 'color 0.25s ease'
             }}
           >
-            <LogOut size={20} />
-            <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Logout</span>
+            <Settings size={20} />
+            {activeSection !== 'settings' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Settings</span>}
           </button>
         </div>
       </div>
