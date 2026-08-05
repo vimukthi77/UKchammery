@@ -6,6 +6,7 @@ import {
   Users, DollarSign, Coins, Clock, RefreshCw, Calendar, 
   UserPlus, CheckCircle, AlertCircle, Edit, ChevronRight, FileText, Download, History, LogOut, Home, Settings
 } from 'lucide-react';
+import Preloader from '@/app/components/Preloader';
 
 interface AdminDashboardProps {
   user: {
@@ -514,11 +515,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   }, [activeTab, reportMonth]);
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyTarget: 'center', justifyContent: 'center', height: '100vh', color: 'var(--primary)', fontWeight: 'bold' } as any}>
-        Loading admin panel...
-      </div>
-    );
+    return <Preloader message="Loading admin panel..." />;
   }
 
   const { stats, charts } = statsData;

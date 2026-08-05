@@ -200,6 +200,10 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--muted)', marginTop: '8px', fontWeight: 500 }}>
+            crafted by <span style={{ color: 'var(--primary)', fontWeight: 700 }}>EPC IT Team</span>
+          </div>
         </div>
       </div>
 

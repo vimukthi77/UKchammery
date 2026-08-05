@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import UserDashboard from '@/app/components/UserDashboard';
 import CookDashboard from '@/app/components/CookDashboard';
 import AdminDashboard from '@/app/components/AdminDashboard';
+import Preloader from '@/app/components/Preloader';
 
 export default function DashboardGateway() {
   const router = useRouter();
@@ -46,20 +47,7 @@ export default function DashboardGateway() {
   };
 
   if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        backgroundColor: 'var(--bg-light)',
-        color: 'var(--primary)',
-        fontWeight: 'bold',
-        fontSize: '1.2rem'
-      }}>
-        Loading your meal dashboard...
-      </div>
-    );
+    return <Preloader message="Preparing your dashboard..." />;
   }
 
   if (!user) return null;

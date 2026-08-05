@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings } from 'lucide-react';
+import Preloader from '@/app/components/Preloader';
 
 interface UserDashboardProps {
   user: {
@@ -244,11 +245,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
   };
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--primary)', fontWeight: 'bold' }}>
-        Loading dashboard...
-      </div>
-    );
+    return <Preloader message="Loading dashboard..." />;
   }
 
   const { today, currentMonth, cutoffTimes, monthlyStats, meals, history, payment, paymentHistory } = data;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { LogOut, Search, Printer, Download, RefreshCw, ClipboardList, Utensils, Calendar } from 'lucide-react';
+import Preloader from '@/app/components/Preloader';
 
 interface CookDashboardProps {
   user: {
@@ -294,9 +295,12 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
         </div>
 
         {/* Loading Spinner */}
-        {loading && (
+        {loading && !data && (
+          <Preloader message="Fetching kitchen orders..." />
+        )}
+        {loading && data && (
           <div style={{ textAlign: 'center', padding: '30px', fontWeight: 'bold', color: 'var(--primary)' }} className="animate-slideup">
-            Fetching menu requests...
+            Refreshing...
           </div>
         )}
 
