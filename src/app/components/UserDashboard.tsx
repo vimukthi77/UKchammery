@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings } from 'lucide-react';
+import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings, Coffee, Utensils, Sunset, Lock } from 'lucide-react';
 import Preloader from '@/app/components/Preloader';
 
 interface UserDashboardProps {
@@ -296,6 +296,69 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
         .meal-checkbox:disabled {
           cursor: not-allowed;
         }
+        .meal-card-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-top: 14px;
+          margin-bottom: 8px;
+        }
+        @media (max-width: 600px) {
+          .meal-card-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .meal-select-card {
+          border: 1.5px solid var(--border);
+          border-radius: var(--radius-md);
+          padding: 20px 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          background-color: #ffffff;
+          cursor: pointer;
+          position: relative;
+          transition: all 0.2s ease;
+          gap: 8px;
+          user-select: none;
+        }
+        .meal-select-card:hover:not(.meal-locked) {
+          transform: translateY(-2px);
+          border-color: var(--primary);
+          box-shadow: var(--shadow-md);
+        }
+        .meal-select-card.meal-selected {
+          border-color: var(--primary);
+          background-color: #f1f8f1;
+          box-shadow: 0 4px 12px rgba(6, 78, 59, 0.05);
+        }
+        .meal-select-card.meal-locked {
+          opacity: 0.6;
+          cursor: not-allowed;
+          background-color: #f7f7f7;
+          border-color: #e5e7eb;
+        }
+        .meal-card-check {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          transition: all 0.2s ease;
+        }
+        .meal-card-check-selected {
+          background-color: var(--primary);
+          color: white;
+        }
+        .meal-card-check-unselected {
+          border: 1.5px solid var(--border);
+        }
       `}</style>
       {/* Top Navbar */}
       <div className="navbar">
@@ -510,96 +573,121 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
                       <AlertCircle size={14} /> Ordering Guidelines
                     </div>
                     <p style={{ margin: 0, lineHeight: 1.4 }}>
-                      You can edit your selections within the cut-off times. Once a meal's cut-off time has passed, the checkbox is locked and you cannot order or modify that meal.
+                      Tap the cards below to select your meals. Cut-off times lock automatically.
                     </p>
                   </div>
-                  
-                  {/* Breakfast Today */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className={`meal-checkbox-container ${isCutoffPassed('breakfast', today) ? 'meal-locked' : ''}`} style={{
-                      opacity: isCutoffPassed('breakfast', today) ? 0.65 : 1
-                    }}>
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Breakfast</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>1 Point | Cutoff {cutoffTimes.breakfast} AM</span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={todayMeals.breakfast}
-                        disabled={isCutoffPassed('breakfast', today) || toggleLoading}
-                        onChange={(e) => setTodayMeals({ ...todayMeals, breakfast: e.target.checked })}
-                      />
-                    </label>
-                    {isCutoffPassed('breakfast', today) && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '4px', fontWeight: 600 }}>
-                        <X size={12} /> Cut-off time passed (Locked)
-                      </span>
-                    )}
-                  </div>
 
-                  {/* Lunch Today */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className={`meal-checkbox-container ${isCutoffPassed('lunch', today) ? 'meal-locked' : ''}`} style={{
-                      opacity: isCutoffPassed('lunch', today) ? 0.65 : 1
-                    }}>
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Lunch</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>2 Points | Cutoff {cutoffTimes.lunch} AM</span>
+                <div className="meal-card-grid">
+                  {/* Breakfast Card */}
+                  {(() => {
+                    const isLocked = isCutoffPassed('breakfast', today);
+                    const isSelected = todayMeals.breakfast;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''} ${isLocked ? 'meal-locked' : ''}`}
+                        onClick={() => !isLocked && !toggleLoading && setTodayMeals({ ...todayMeals, breakfast: !todayMeals.breakfast })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Coffee size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Breakfast</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#FEF3C7', color: '#D97706', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>1 Pt</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Cutoff: {cutoffTimes.breakfast} AM</span>
+                        {isLocked ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 700, marginTop: '2px' }}>
+                            <Lock size={10} /> Locked
+                          </span>
+                        ) : isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={todayMeals.lunch}
-                        disabled={isCutoffPassed('lunch', today) || toggleLoading}
-                        onChange={(e) => setTodayMeals({ ...todayMeals, lunch: e.target.checked })}
-                      />
-                    </label>
-                    {isCutoffPassed('lunch', today) && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '4px', fontWeight: 600 }}>
-                        <X size={12} /> Cut-off time passed (Locked)
-                      </span>
-                    )}
-                  </div>
+                    );
+                  })()}
 
-                  {/* Dinner Today */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className={`meal-checkbox-container ${isCutoffPassed('dinner', today) ? 'meal-locked' : ''}`} style={{
-                      opacity: isCutoffPassed('dinner', today) ? 0.65 : 1
-                    }}>
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Dinner</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>1 Point | Cutoff {cutoffTimes.dinner} PM</span>
+                  {/* Lunch Card */}
+                  {(() => {
+                    const isLocked = isCutoffPassed('lunch', today);
+                    const isSelected = todayMeals.lunch;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''} ${isLocked ? 'meal-locked' : ''}`}
+                        onClick={() => !isLocked && !toggleLoading && setTodayMeals({ ...todayMeals, lunch: !todayMeals.lunch })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Utensils size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Lunch</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#D1FAE5', color: '#059669', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>2 Pts</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Cutoff: {cutoffTimes.lunch} AM</span>
+                        {isLocked ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 700, marginTop: '2px' }}>
+                            <Lock size={10} /> Locked
+                          </span>
+                        ) : isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={todayMeals.dinner}
-                        disabled={isCutoffPassed('dinner', today) || toggleLoading}
-                        onChange={(e) => setTodayMeals({ ...todayMeals, dinner: e.target.checked })}
-                      />
-                    </label>
-                    {isCutoffPassed('dinner', today) && (
-                      <span style={{ fontSize: '0.7rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '4px', fontWeight: 600 }}>
-                        <X size={12} /> Cut-off time passed (Locked)
-                      </span>
-                    )}
-                  </div>
+                    );
+                  })()}
+
+                  {/* Dinner Card */}
+                  {(() => {
+                    const isLocked = isCutoffPassed('dinner', today);
+                    const isSelected = todayMeals.dinner;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''} ${isLocked ? 'meal-locked' : ''}`}
+                        onClick={() => !isLocked && !toggleLoading && setTodayMeals({ ...todayMeals, dinner: !todayMeals.dinner })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Sunset size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Dinner</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#DBEAFE', color: '#2563EB', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>1 Pt</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Cutoff: {cutoffTimes.dinner} PM</span>
+                        {isLocked ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 700, marginTop: '2px' }}>
+                            <Lock size={10} /> Locked
+                          </span>
+                        ) : isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                <button 
-                  className="btn btn-primary" 
-                  style={{ width: '100%', marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
-                  onClick={() => handleSubmitRequests(today, todayMeals)}
-                  disabled={
-                    toggleLoading || 
-                    (isCutoffPassed('breakfast', today) && isCutoffPassed('lunch', today) && isCutoffPassed('dinner', today)) ||
-                    !isMealFormModified(today, todayMeals)
-                  }
-                >
-                  {getButtonText(today)}
-                </button>
+                {/* Estimate summary bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#fafafa', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginTop: '10px', fontSize: '0.78rem' }}>
+                  <span style={{ color: 'var(--muted)' }}>Estimated Points Selected:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
+                    {((todayMeals.breakfast ? 1 : 0) + (todayMeals.lunch ? 2 : 0) + (todayMeals.dinner ? 1 : 0))} Points
+                  </span>
+                </div>
               </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
+                onClick={() => handleSubmitRequests(today, todayMeals)}
+                disabled={
+                  toggleLoading || 
+                  (isCutoffPassed('breakfast', today) && isCutoffPassed('lunch', today) && isCutoffPassed('dinner', today)) ||
+                  !isMealFormModified(today, todayMeals)
+                }
+              >
+                {getButtonText(today)}
+              </button>
+            </div>
             ) : (
               /* Tomorrow's Ordering Section */
               <div className="card">
@@ -629,71 +717,102 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
                       <AlertCircle size={14} /> Ordering Guidelines
                     </div>
                     <p style={{ margin: 0, lineHeight: 1.4 }}>
-                      You can edit your selections within the cut-off times. Once a meal's cut-off time has passed, the checkbox is locked and you cannot order or modify that meal.
+                      Tap the cards below to select your meals for tomorrow.
                     </p>
                   </div>
 
+                <div className="meal-card-grid">
                   {/* Breakfast Tomorrow */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className="meal-checkbox-container">
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Breakfast</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>1 Point | Open</span>
+                  {(() => {
+                    const isSelected = tomorrowMeals.breakfast;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''}`}
+                        onClick={() => !toggleLoading && setTomorrowMeals({ ...tomorrowMeals, breakfast: !tomorrowMeals.breakfast })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Coffee size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Breakfast</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#FEF3C7', color: '#D97706', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>1 Pt</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Tomorrow order (Open)</span>
+                        {isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={tomorrowMeals.breakfast}
-                        disabled={toggleLoading}
-                        onChange={(e) => setTomorrowMeals({ ...tomorrowMeals, breakfast: e.target.checked })}
-                      />
-                    </label>
-                  </div>
+                    );
+                  })()}
 
                   {/* Lunch Tomorrow */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className="meal-checkbox-container">
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Lunch</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>2 Points | Open</span>
+                  {(() => {
+                    const isSelected = tomorrowMeals.lunch;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''}`}
+                        onClick={() => !toggleLoading && setTomorrowMeals({ ...tomorrowMeals, lunch: !tomorrowMeals.lunch })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Utensils size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Lunch</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#D1FAE5', color: '#059669', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>2 Pts</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Tomorrow order (Open)</span>
+                        {isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={tomorrowMeals.lunch}
-                        disabled={toggleLoading}
-                        onChange={(e) => setTomorrowMeals({ ...tomorrowMeals, lunch: e.target.checked })}
-                      />
-                    </label>
-                  </div>
+                    );
+                  })()}
 
                   {/* Dinner Tomorrow */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label className="meal-checkbox-container">
-                      <div className="meal-info">
-                        <span className="meal-name" style={{ fontWeight: 600 }}>Dinner</span>
-                        <span className="meal-points" style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>1 Point | Open</span>
+                  {(() => {
+                    const isSelected = tomorrowMeals.dinner;
+                    return (
+                      <div 
+                        className={`meal-select-card ${isSelected ? 'meal-selected' : ''}`}
+                        onClick={() => !toggleLoading && setTomorrowMeals({ ...tomorrowMeals, dinner: !tomorrowMeals.dinner })}
+                      >
+                        <div className={`meal-card-check ${isSelected ? 'meal-card-check-selected' : 'meal-card-check-unselected'}`}>
+                          {isSelected && <Check size={10} />}
+                        </div>
+                        <Sunset size={24} style={{ color: isSelected ? 'var(--primary)' : 'var(--muted)', marginTop: '4px' }} />
+                        <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--foreground)' }}>Dinner</span>
+                        <span style={{ fontSize: '0.65rem', backgroundColor: '#DBEAFE', color: '#2563EB', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>1 Pt</span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>Tomorrow order (Open)</span>
+                        {isSelected ? (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, marginTop: '2px' }}>Selected</span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginTop: '2px' }}>Select</span>
+                        )}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="meal-checkbox"
-                        checked={tomorrowMeals.dinner}
-                        disabled={toggleLoading}
-                        onChange={(e) => setTomorrowMeals({ ...tomorrowMeals, dinner: e.target.checked })}
-                      />
-                    </label>
-                  </div>
+                    );
+                  })()}
                 </div>
 
-                <button 
-                  className="btn btn-primary" 
-                  style={{ width: '100%', marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
-                  onClick={() => handleSubmitRequests(tomorrowStr, tomorrowMeals)}
-                  disabled={toggleLoading || !isMealFormModified(tomorrowStr, tomorrowMeals)}
-                >
-                  {getButtonText(tomorrowStr)}
-                </button>
+                {/* Estimate summary bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#fafafa', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', marginTop: '10px', fontSize: '0.78rem' }}>
+                  <span style={{ color: 'var(--muted)' }}>Estimated Points Selected:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.85rem' }}>
+                    {((tomorrowMeals.breakfast ? 1 : 0) + (tomorrowMeals.lunch ? 2 : 0) + (tomorrowMeals.dinner ? 1 : 0))} Points
+                  </span>
+                </div>
               </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', marginTop: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
+                onClick={() => handleSubmitRequests(tomorrowStr, tomorrowMeals)}
+                disabled={toggleLoading || !isMealFormModified(tomorrowStr, tomorrowMeals)}
+              >
+                {getButtonText(tomorrowStr)}
+              </button>
+            </div>
             )}
           </>
         )}
