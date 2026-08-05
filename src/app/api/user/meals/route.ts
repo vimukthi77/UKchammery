@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       // Estimate Point Price: Total collection / Total points by all users this month
       // Total money collected this month
       const totalCollectionResult = await User.aggregate([
-        { $match: { role: 'user', status: 'active' } },
+        { $match: { role: { $in: ['user', 'cook'] }, status: 'active' } },
         { $group: { _id: null, total: { $sum: '$balance' } } }
       ]);
       const totalCollection = totalCollectionResult[0]?.total || 0;
@@ -154,6 +154,11 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const requestUser = await User.findById(userId);
+    if (!requestUser || requestUser.role !== 'user') {
+      return NextResponse.json({ success: false, message: 'Only office staff (users) can request meals' }, { status: 403 });
     }
 
     const { date, breakfast, lunch, dinner } = await request.json();

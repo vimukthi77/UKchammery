@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     await dbConnect();
     const adminId = request.headers.get('x-user-id') as string;
-    const { name, email, password, role, balance } = await request.json();
+    const { name, email, password, role, balance, location } = await request.json();
 
     if (!name || !email || !password || !role) {
       return NextResponse.json({ success: false, message: 'Missing required fields' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       passwordHash,
       role,
       balance: balance || 0,
+      location: location || 'none',
       status: 'active'
     });
 
@@ -76,7 +77,8 @@ export async function POST(request: NextRequest) {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
-        balance: newUser.balance
+        balance: newUser.balance,
+        location: newUser.location
       }
     });
   } catch (error: any) {
@@ -116,7 +118,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Meal request updated successfully', meal });
     }
 
-    const { userId, name, email, role, status, balance, password } = body;
+    const { userId, name, email, role, status, balance, password, location } = body;
 
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Missing userId' }, { status: 400 });
@@ -142,6 +144,7 @@ export async function PUT(request: NextRequest) {
     if (password) {
       user.passwordHash = await hashPassword(password);
     }
+    if (location !== undefined) user.location = location;
 
     await user.save();
 
@@ -161,7 +164,8 @@ export async function PUT(request: NextRequest) {
         email: user.email,
         role: user.role,
         balance: user.balance,
-        status: user.status
+        status: user.status,
+        location: user.location
       }
     });
   } catch (error: any) {

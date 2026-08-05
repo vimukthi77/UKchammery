@@ -86,7 +86,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
     });
     text += `\n`;
 
-    text += `Dinner Orders (${totals.dinner}):\n`;
+    text += `Dinner Orders (Total: ${totals.dinner + (totals.dinnerUK || 0) + (totals.dinnerUK2 || 0) + (totals.dinnerKadana || 0)} - Office: ${totals.dinner}, UK: ${totals.dinnerUK || 0}, UK2: ${totals.dinnerUK2 || 0}, Kadana: ${totals.dinnerKadana || 0}):\n`;
     lists.dinner.forEach((name: string, i: number) => {
       text += `${i + 1}. ${name}\n`;
     });
@@ -225,7 +225,7 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
 
         {/* KPI Kitchen Count Grid */}
         {!loading && data && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }} className="no-print animate-slideup">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }} className="no-print animate-slideup">
             <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#FFF8E7', border: '1px solid #FCD34D', gap: '4px' }}>
               <Utensils size={24} style={{ color: '#D97706' }} />
               <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Breakfast</span>
@@ -240,8 +240,26 @@ export default function CookDashboard({ user, onLogout }: CookDashboardProps) {
             
             <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD', gap: '4px' }}>
               <Utensils size={24} style={{ color: '#2563EB' }} />
-              <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Dinner</span>
+              <span style={{ fontSize: '0.72rem', color: '#2563EB', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Dinner (Office)</span>
               <h3 style={{ fontSize: '1.5rem', color: '#2563EB', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinner}</h3>
+            </div>
+
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#F9FAFB', border: '1px solid #D1D5DB', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#4B5563' }} />
+              <span style={{ fontSize: '0.72rem', color: '#4B5563', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>UK Dinner</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#4B5563', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinnerUK || 0}</h3>
+            </div>
+
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#F9FAFB', border: '1px solid #D1D5DB', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#4B5563' }} />
+              <span style={{ fontSize: '0.72rem', color: '#4B5563', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>UK2 Dinner</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#4B5563', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinnerUK2 || 0}</h3>
+            </div>
+
+            <div className="card" style={{ padding: '12px', alignItems: 'center', textAlign: 'center', backgroundColor: '#F9FAFB', border: '1px solid #D1D5DB', gap: '4px' }}>
+              <Utensils size={24} style={{ color: '#4B5563' }} />
+              <span style={{ fontSize: '0.72rem', color: '#4B5563', fontWeight: 800, textTransform: 'uppercase', marginTop: '2px' }}>Kadana Dinner</span>
+              <h3 style={{ fontSize: '1.5rem', color: '#4B5563', margin: '2px 0 0 0', fontWeight: 800 }}>{data.totals.dinnerKadana || 0}</h3>
             </div>
           </div>
         )}

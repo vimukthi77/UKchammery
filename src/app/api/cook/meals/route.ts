@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
     const dateStr = searchParams.get('date') || getLocalTodayStr();
     const searchQuery = searchParams.get('search') || '';
 
-    // Fetch meal requests for this date, populate user info
+    // Fetch meal requests for this date, populate user info including location
     const requests = await MealRequest.find({ date: dateStr })
-      .populate('userId', 'name email status')
+      .populate('userId', 'name email status location')
       .exec();
 
     // Filter by search query if active
@@ -36,11 +36,25 @@ export async function GET(request: NextRequest) {
     const lunchList: string[] = [];
     const dinnerList: string[] = [];
 
+    let dinnerStandardCount = 0;
+    let dinnerUKCount = 0;
+    let dinnerUK2Count = 0;
+    let dinnerKadanaCount = 0;
+
     filteredRequests.forEach(req => {
       const user = req.userId as any;
-      if (req.breakfast) breakfastList.push(user.name);
-      if (req.lunch) lunchList.push(user.name);
-      if (req.dinner) dinnerList.push(user.name);
+      const guestSuffix = user.location && user.location !== 'none' ? ` (${user.location})` : '';
+      const displayName = `${user.name}${guestSuffix}`;
+
+      if (req.breakfast) breakfastList.push(displayName);
+      if (req.lunch) lunchList.push(displayName);
+      if (req.dinner) {
+        dinnerList.push(displayName);
+        if (user.location === 'UK Guest') dinnerUKCount++;
+        else if (user.location === 'UK Guest 2') dinnerUK2Count++;
+        else if (user.location === 'Kadana Guest') dinnerKadanaCount++;
+        else dinnerStandardCount++;
+      }
     });
 
     return NextResponse.json({
@@ -50,7 +64,10 @@ export async function GET(request: NextRequest) {
         totals: {
           breakfast: breakfastList.length,
           lunch: lunchList.length,
-          dinner: dinnerList.length,
+          dinner: dinnerStandardCount,
+          dinnerUK: dinnerUKCount,
+          dinnerUK2: dinnerUK2Count,
+          dinnerKadana: dinnerKadanaCount
         },
         lists: {
           breakfast: breakfastList,

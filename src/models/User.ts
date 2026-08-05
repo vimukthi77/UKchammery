@@ -7,6 +7,7 @@ export interface IUser extends Document {
   role: 'admin' | 'cook' | 'user';
   status: 'active' | 'inactive';
   balance: number; // Available wallet balance
+  location: 'none' | 'UK Guest' | 'UK Guest 2' | 'Kadana Guest';
   createdAt: Date;
 }
 
@@ -18,6 +19,7 @@ const UserSchema: Schema<IUser> = new Schema(
     role: { type: String, required: true, enum: ['admin', 'cook', 'user'] },
     status: { type: String, required: true, enum: ['active', 'inactive'], default: 'active' },
     balance: { type: Number, required: true, default: 0 },
+    location: { type: String, enum: ['none', 'UK Guest', 'UK Guest 2', 'Kadana Guest'], default: 'none' },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

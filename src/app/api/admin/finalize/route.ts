@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Calculate Total Collection this month
     const totalCollectionResult = await User.aggregate([
-      { $match: { role: 'user', status: 'active' } },
+      { $match: { role: { $in: ['user', 'cook'] }, status: 'active' } },
       { $group: { _id: null, total: { $sum: '$balance' } } }
     ]);
     const totalCollection = totalCollectionResult[0]?.total || 0;
@@ -141,6 +141,9 @@ export async function POST(request: NextRequest) {
         text: `Hello ${user.name},\n\nYour meal statement for ${month} is ready:\nBreakfast: ${userBreakfasts}\nLunch: ${userLunches}\nDinner: ${userDinners}\nTotal Points: ${userPoints}\nPoint Price: Rs.${pointPrice.toFixed(2)}\nTotal Cost: Rs.${userCost.toFixed(2)}\nRemaining Balance: Rs.${user.balance.toFixed(2)}\n\nThank you.`
       });
     }
+
+    // Reset all cook balances to 0
+    await User.updateMany({ role: 'cook' }, { $set: { balance: 0 } });
 
     // 6. Record or update MonthlySummary
     const summary = await MonthlySummary.findOneAndUpdate(

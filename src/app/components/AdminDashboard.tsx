@@ -67,7 +67,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const [pastMeals, setPastMeals] = useState({ breakfast: false, lunch: false, dinner: false });
 
   // Form states
-  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'user', balance: 0 });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'user', balance: 0, location: 'none' });
   const [paymentForm, setPaymentForm] = useState({ userId: '', amount: 12000, month: '', notes: '' });
   const [settingsForm, setSettingsForm] = useState({ breakfast: '07:30', lunch: '10:00', dinner: '18:00' });
   const [reportMonth, setReportMonth] = useState('');
@@ -237,7 +237,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
       if (data.success) {
         flashSuccess('User registered successfully');
         setShowAddUser(false);
-        setUserForm({ name: '', email: '', password: '', role: 'user', balance: 0 });
+        setUserForm({ name: '', email: '', password: '', role: 'user', balance: 0, location: 'none' });
         await loadAllAdminData();
       } else {
         flashError(data.message || 'Failed to register user');
@@ -675,18 +675,30 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             {/* Daily Meal Breakdown */}
             <div className="card">
               <h3 style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>Current Month Requests</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', textAlign: 'center', marginTop: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 10px', textAlign: 'center', marginTop: '6px' }}>
                 <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--muted)', display: 'block' }}>Breakfasts</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Breakfasts</span>
                   <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.breakfastRequests}</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--muted)', display: 'block' }}>Lunches</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Lunches</span>
                   <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.lunchRequests}</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--muted)', display: 'block' }}>Dinners</span>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--muted)', display: 'block' }}>Total Dinners</span>
                   <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{stats.dinnerRequests}</span>
+                </div>
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>UK Dinner</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerUKRequests || 0}</span>
+                </div>
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>UK2 Dinner</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerUK2Requests || 0}</span>
+                </div>
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--muted)', display: 'block' }}>Kadana Dinner</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{stats.dinnerKadanaRequests || 0}</span>
                 </div>
               </div>
             </div>
@@ -770,7 +782,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                       <input type="text" value={userForm.password} onChange={e => setUserForm({...userForm, password: e.target.value})} required placeholder="Create temporary password" />
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Role</label>
                       <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} required>
                         <option value="user">Office Staff</option>
@@ -778,6 +790,18 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         <option value="admin">Administrator</option>
                       </select>
                     </div>
+
+                    {userForm.role === 'user' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Location</label>
+                        <select value={userForm.location || 'none'} onChange={e => setUserForm({...userForm, location: e.target.value})}>
+                          <option value="none">Office (None)</option>
+                          <option value="UK Guest">UK Guest</option>
+                          <option value="UK Guest 2">UK Guest 2</option>
+                          <option value="Kadana Guest">Kadana Guest</option>
+                        </select>
+                      </div>
+                    )}
 
                     </div>
 
@@ -807,7 +831,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                       <input type="email" value={editingUser.email} onChange={e => setEditingUser({...editingUser, email: e.target.value})} required />
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Role</label>
                       <select value={editingUser.role} onChange={e => setEditingUser({...editingUser, role: e.target.value})} required>
                         <option value="user">Office Staff</option>
@@ -815,6 +839,18 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                         <option value="admin">Administrator</option>
                       </select>
                     </div>
+
+                    {editingUser.role === 'user' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Location</label>
+                        <select value={editingUser.location || 'none'} onChange={e => setEditingUser({...editingUser, location: e.target.value})}>
+                          <option value="none">Office (None)</option>
+                          <option value="UK Guest">UK Guest</option>
+                          <option value="UK Guest 2">UK Guest 2</option>
+                          <option value="Kadana Guest">Kadana Guest</option>
+                        </select>
+                      </div>
+                    )}
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Status</label>
@@ -824,7 +860,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                       </select>
                     </div>
 
-                    {editingUser.role === 'user' && (
+                    {(editingUser.role === 'user' || editingUser.role === 'cook') && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Current Balance (Rs.)</label>
                         <input type="number" value={editingUser.balance} onChange={e => setEditingUser({...editingUser, balance: Number(e.target.value)})} />
@@ -996,9 +1032,12 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', borderTop: '1px solid #f0f0f0', paddingTop: '8px', marginTop: '4px' }}>
                     <div>
                       <span className="badge badge-success" style={{ marginRight: '6px', fontSize: '0.65rem' }}>{u.role === 'user' ? 'Office Staff' : u.role === 'cook' ? 'Cook / Chef' : 'Administrator'}</span>
+                      {u.role === 'user' && u.location && u.location !== 'none' && (
+                        <span className="badge" style={{ marginRight: '6px', fontSize: '0.65rem', backgroundColor: 'var(--accent)', color: 'white' }}>{u.location}</span>
+                      )}
                       <span className={`badge ${u.status === 'active' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>{u.status}</span>
                     </div>
-                    {u.role === 'user' && (
+                    {(u.role === 'user' || u.role === 'cook') && (
                       <span style={{ fontWeight: 700, color: 'var(--primary)' }}>
                         Balance: Rs. {u.balance.toLocaleString()}
                       </span>

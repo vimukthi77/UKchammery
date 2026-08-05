@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
     const activeUsers = await User.countDocuments({ status: 'active' });
     const userRoleCount = await User.countDocuments({ role: 'user' });
 
-    // 2. Payments stats (Redefined as the total sum of all user balances)
+    // 2. Payments stats (Redefined as the total sum of all user balances, including cooks)
     const totalBalancesResult = await User.aggregate([
-      { $match: { role: 'user' } },
+      { $match: { role: { $in: ['user', 'cook'] } } },
       { $group: { _id: null, total: { $sum: '$balance' } } }
     ]);
     const totalMonthlyCollection = totalBalancesResult[0]?.total || 0;
@@ -29,17 +29,26 @@ export async function GET(request: NextRequest) {
     // 3. Current Month Meal Counts & Points
     const monthlyMeals = await MealRequest.find({
       date: { $gte: startOfMonth, $lte: endOfMonth }
-    });
+    }).populate('userId', 'location');
 
     let breakfastRequests = 0;
     let lunchRequests = 0;
     let dinnerRequests = 0;
+    let dinnerUKRequests = 0;
+    let dinnerUK2Requests = 0;
+    let dinnerKadanaRequests = 0;
     let totalPoints = 0;
 
     monthlyMeals.forEach((m) => {
+      const user = m.userId as any;
       if (m.breakfast) breakfastRequests++;
       if (m.lunch) lunchRequests++;
-      if (m.dinner) dinnerRequests++;
+      if (m.dinner) {
+        dinnerRequests++;
+        if (user?.location === 'UK Guest') dinnerUKRequests++;
+        else if (user?.location === 'UK Guest 2') dinnerUK2Requests++;
+        else if (user?.location === 'Kadana Guest') dinnerKadanaRequests++;
+      }
       totalPoints += m.points;
     });
 
@@ -147,6 +156,9 @@ export async function GET(request: NextRequest) {
         breakfastRequests,
         lunchRequests,
         dinnerRequests,
+        dinnerUKRequests,
+        dinnerUK2Requests,
+        dinnerKadanaRequests,
         pendingPayments: pendingPaymentsCount,
         usersWithDueBalances: dueBalancesCount
       },

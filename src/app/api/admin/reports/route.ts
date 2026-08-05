@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Fetch payments and points if not finalized, to estimate point price
     if (!isFinalized) {
       const totalCollectionResult = await User.aggregate([
-        { $match: { role: 'user', status: 'active' } },
+        { $match: { role: { $in: ['user', 'cook'] }, status: 'active' } },
         { $group: { _id: null, total: { $sum: '$balance' } } }
       ]);
       const totalCollection = totalCollectionResult[0]?.total || 0;
