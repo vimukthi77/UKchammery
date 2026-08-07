@@ -53,6 +53,8 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const [finalizeConfirm, setFinalizeConfirm] = useState(false);
   const [showPendingPaymentsModal, setShowPendingPaymentsModal] = useState(false);
   const [showDueBalancesModal, setShowDueBalancesModal] = useState(false);
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [allocationAmountForm, setAllocationAmountForm] = useState<string | number>('');
 
   // Expanded User Points logs
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -387,6 +389,31 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     }
   };
 
+  // Monthly Chammery Budget Allocation
+  const handleSaveAllocation = async () => {
+    setActionLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/admin/allocation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month: currentMonthStr, amount: Number(allocationAmountForm) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        flashSuccess(`Allocation for ${currentMonthStr} updated to Rs. ${Number(allocationAmountForm).toLocaleString()}`);
+        setShowAllocationModal(false);
+        await loadAllAdminData();
+      } else {
+        flashError(data.message || 'Failed to save allocation');
+      }
+    } catch (err) {
+      flashError('Server error saving allocation');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Monthly Finalization
   const handleFinalizeMonth = async () => {
     setActionLoading(true);
@@ -623,8 +650,33 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
               </div>
 
               <div className="card" style={{ padding: '14px', gap: '4px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>This Month Collection</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Total balance</span>
                 <h3 style={{ fontSize: '1.4rem', color: 'var(--success)' }}>Rs. {stats.totalMonthlyCollection.toLocaleString()}</h3>
+              </div>
+
+              <div 
+                className="card" 
+                style={{ padding: '14px', gap: '4px', cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }} 
+                onClick={() => {
+                  setAllocationAmountForm(stats.allocatedAmount || 0);
+                  setShowAllocationModal(true);
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+                }}
+              >
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>This Month Chammery Allocated</span>
+                <h3 style={{ fontSize: '1.4rem', color: 'var(--primary)' }}>Rs. {(stats.allocatedAmount || 0).toLocaleString()}</h3>
+              </div>
+
+              <div className="card" style={{ padding: '14px', gap: '4px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Balance for next month chammery</span>
+                <h3 style={{ fontSize: '1.4rem', color: 'var(--success)' }}>Rs. {(stats.totalMonthlyCollection - (stats.allocatedAmount || 0)).toLocaleString()}</h3>
               </div>
 
               <div className="card" style={{ padding: '14px', gap: '4px' }}>
@@ -1628,9 +1680,10 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
               </p>
 
               <ul style={{ paddingLeft: '20px', fontSize: '0.85rem', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <li>Aggregate all monthly collections (Rs. {stats.totalMonthlyCollection.toLocaleString()}).</li>
+                <li>Aggregate all employee balances (Rs. {stats.totalMonthlyCollection.toLocaleString()}).</li>
+                <li>Use the allocated chammery amount: <strong>Rs. {(stats.allocatedAmount || 0).toLocaleString()}</strong>.</li>
                 <li>Aggregate total points consumed by all users ({stats.currentTotalPoints} points).</li>
-                <li>Compute point price: <strong>Rs. {stats.estimatedPointPrice.toFixed(2)}</strong>.</li>
+                <li>Compute point price based on allocation: <strong>Rs. {stats.estimatedPointPrice.toFixed(2)}</strong>.</li>
                 <li>Deduct calculated food costs from each staff member's balance.</li>
                 <li>Generate monthly invoice statements and email reports automatically.</li>
               </ul>
@@ -1678,6 +1731,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
           </div>
         )}
       </div>
+
 
       {/* Bottom Tab Navigation Bar */}
       <div className="bottom-nav no-print" style={{ 
@@ -1943,6 +1997,42 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
           </div>
         );
       })()}
+
+      {/* Modal: Update Monthly Allocation */}
+      {showAllocationModal && (
+        <div className="modal-overlay" onClick={() => setShowAllocationModal(false)}>
+          <div className="modal-content animate-slideup" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', borderRadius: 'var(--radius-md)', padding: '20px' }}>
+            <h3 style={{ fontSize: '1.25rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '10px', color: 'var(--primary)', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              Set Monthly Allocation
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '15px' }}>
+              Allocate the budget/amount for the chammery for <strong>{currentMonthStr}</strong>.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px', textAlign: 'left' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--foreground)' }}>Allocated Amount (Rs.)</label>
+              <input 
+                type="number" 
+                value={allocationAmountForm} 
+                onChange={(e) => setAllocationAmountForm(e.target.value)} 
+                placeholder="Enter allocated amount"
+                style={{ padding: '12px 16px', borderRadius: '9999px', border: '1px solid var(--border)', width: '100%', fontSize: '1rem' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-secondary" onClick={() => setShowAllocationModal(false)} style={{ flex: 1 }}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleSaveAllocation} 
+                disabled={actionLoading}
+                style={{ flex: 1, backgroundColor: 'var(--success)', border: 'none', color: '#ffffff' }}
+              >
+                {actionLoading ? 'Saving...' : 'Save Allocation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

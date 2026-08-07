@@ -5,6 +5,7 @@ export interface IMonthlySummary extends Document {
   totalCollection: number;
   totalPoints: number;
   pointPrice: number;
+  allocatedAmount: number;
   finalized: boolean;
   finalizedAt?: Date;
   finalizedBy?: mongoose.Types.ObjectId;
@@ -17,6 +18,7 @@ const MonthlySummarySchema: Schema<IMonthlySummary> = new Schema(
     totalCollection: { type: Number, required: true, default: 0 },
     totalPoints: { type: Number, required: true, default: 0 },
     pointPrice: { type: Number, required: true, default: 0 },
+    allocatedAmount: { type: Number, required: true, default: 0 },
     finalized: { type: Boolean, default: false },
     finalizedAt: { type: Date },
     finalizedBy: { type: Schema.Types.ObjectId, ref: 'User' },

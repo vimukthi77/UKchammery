@@ -79,14 +79,6 @@ export async function GET(request: NextRequest) {
       // Remaining balance for finalized month is whatever user has left in balance
       remainingBalance = user.balance;
     } else {
-      // Estimate Point Price: Total collection / Total points by all users this month
-      // Total money collected this month
-      const totalCollectionResult = await User.aggregate([
-        { $match: { role: { $in: ['user', 'cook'] }, status: 'active' } },
-        { $group: { _id: null, total: { $sum: '$balance' } } }
-      ]);
-      const totalCollection = totalCollectionResult[0]?.total || 0;
-
       // Total points consumed by ALL users this month
       const totalPointsResult = await MealRequest.aggregate([
         { $match: { date: { $gte: startOfMonth, $lte: endOfMonth } } },
@@ -94,8 +86,10 @@ export async function GET(request: NextRequest) {
       ]);
       const totalPoints = totalPointsResult[0]?.total || 0;
 
-      // Calculate estimated point price
-      pointPrice = totalPoints > 0 ? totalCollection / totalPoints : 0;
+      const allocatedAmount = monthlySummary ? (monthlySummary.allocatedAmount || 0) : 0;
+
+      // Calculate estimated point price based on allocation
+      pointPrice = totalPoints > 0 ? allocatedAmount / totalPoints : 0;
       totalMealCost = userPointsUsed * pointPrice;
       
       // Estimated Remaining Balance

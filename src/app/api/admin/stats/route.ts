@@ -4,6 +4,7 @@ import User from '@/models/User';
 import Payment from '@/models/Payment';
 import MealRequest from '@/models/MealRequest';
 import { getLocalTodayStr, getMonthStr } from '@/lib/dateUtils';
+import MonthlySummary from '@/models/MonthlySummary';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +26,10 @@ export async function GET(request: NextRequest) {
       { $group: { _id: null, total: { $sum: '$balance' } } }
     ]);
     const totalMonthlyCollection = totalBalancesResult[0]?.total || 0;
+
+    // Fetch allocated amount for current month
+    const currentSummary = await MonthlySummary.findOne({ month: currentMonth });
+    const allocatedAmount = currentSummary ? (currentSummary.allocatedAmount || 0) : 0;
 
     // 3. Current Month Meal Counts & Points
     const monthlyMeals = await MealRequest.find({
@@ -52,8 +57,8 @@ export async function GET(request: NextRequest) {
       totalPoints += m.points;
     });
 
-    // 4. Point Price Estimate
-    const estimatedPointPrice = totalPoints > 0 ? totalMonthlyCollection / totalPoints : 0;
+    // 4. Point Price Estimate (based on allocation)
+    const estimatedPointPrice = totalPoints > 0 ? allocatedAmount / totalPoints : 0;
 
     // 5. Payment Due accounts
     // Find users of role 'user' who do NOT have a paid record for the current month
@@ -151,6 +156,7 @@ export async function GET(request: NextRequest) {
         registeredUsers: totalUsers,
         activeUsers,
         totalMonthlyCollection,
+        allocatedAmount,
         currentTotalPoints: totalPoints,
         estimatedPointPrice,
         breakfastRequests,

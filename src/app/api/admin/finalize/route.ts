@@ -48,8 +48,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 4. Calculate Point Price
-    const pointPrice = totalCollection / totalPoints;
+    // 4. Calculate Point Price based on allocation
+    const allocatedAmount = existingSummary ? (existingSummary.allocatedAmount || 0) : 0;
+    const pointPrice = totalPoints > 0 ? allocatedAmount / totalPoints : 0;
 
     // 5. Fetch all active users (staff)
     const users = await User.find({ role: 'user', status: 'active' });

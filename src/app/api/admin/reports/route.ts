@@ -26,18 +26,13 @@ export async function GET(request: NextRequest) {
 
     // Fetch payments and points if not finalized, to estimate point price
     if (!isFinalized) {
-      const totalCollectionResult = await User.aggregate([
-        { $match: { role: { $in: ['user', 'cook'] }, status: 'active' } },
-        { $group: { _id: null, total: { $sum: '$balance' } } }
-      ]);
-      const totalCollection = totalCollectionResult[0]?.total || 0;
-
       const totalPointsResult = await MealRequest.aggregate([
         { $match: { date: { $gte: startOfMonth, $lte: endOfMonth } } },
         { $group: { _id: null, total: { $sum: '$points' } } }
       ]);
       const totalPoints = totalPointsResult[0]?.total || 0;
-      pointPrice = totalPoints > 0 ? totalCollection / totalPoints : 0;
+      const allocatedAmount = summary ? (summary.allocatedAmount || 0) : 0;
+      pointPrice = totalPoints > 0 ? allocatedAmount / totalPoints : 0;
     }
 
     // 2. Fetch all staff users
