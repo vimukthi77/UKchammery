@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
       const guestSuffix = user.location && user.location !== 'none' ? ` (${user.location})` : '';
       const displayName = `${user.name}${guestSuffix}`;
 
-      if (req.breakfast) breakfastList.push(displayName);
-      if (req.lunch) lunchList.push(displayName);
+      if (req.breakfast) breakfastList.push(user.name);
+      if (req.lunch) lunchList.push(user.name);
       if (req.dinner) {
         dinnerList.push(displayName);
         if (user.location === 'UK Guest') dinnerUKCount++;

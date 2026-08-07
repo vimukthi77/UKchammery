@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings, Coffee, Utensils, Sunset, Lock } from 'lucide-react';
+import { LogOut, Bell, Calendar, History, Coins, Check, X, AlertCircle, Home, FileText, Settings, Coffee, Utensils, Sunset, Lock, ClipboardList } from 'lucide-react';
 import Preloader from '@/app/components/Preloader';
 
 interface UserDashboardProps {
@@ -23,9 +23,14 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
   const [toggleLoading, setToggleLoading] = useState(false);
   
   // Navigation State
-  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications' | 'payments'>('order');
+  const [activeSection, setActiveSection] = useState<'order' | 'report' | 'history' | 'notifications' | 'payments' | 'all_orders'>('order');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
+  // Daily Orders Summary States
+  const [dailyOrders, setDailyOrders] = useState<any>(null);
+  const [loadingDailyOrders, setLoadingDailyOrders] = useState(false);
+  const [dailyOrdersTab, setDailyOrdersTab] = useState<'today' | 'tomorrow'>('today');
 
   // Change Password Form States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -44,8 +49,9 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
       case 'history': return 0;
       case 'report': return 1;
       case 'order': return 2;
-      case 'notifications': return 3;
-      case 'payments': return 4;
+      case 'all_orders': return 3;
+      case 'notifications': return 4;
+      case 'payments': return 5;
       default: return 2;
     }
   };
@@ -69,6 +75,62 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
     } catch (err) {
       setError('Connection error loading dashboard');
     }
+  };
+
+  const loadDailyOrders = async () => {
+    setLoadingDailyOrders(true);
+    try {
+      const res = await fetch('/api/user/daily-orders');
+      const json = await res.json();
+      if (json.success) {
+        setDailyOrders(json);
+      } else {
+        setError(json.message || 'Failed to load daily orders');
+      }
+    } catch (err) {
+      console.error('Failed to load daily orders', err);
+      setError('Connection error loading daily orders');
+    } finally {
+      setLoadingDailyOrders(false);
+    }
+  };
+
+  const flashSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  const handleCopyOrdersText = (day: 'today' | 'tomorrow') => {
+    const dataForDay = day === 'today' ? dailyOrders?.today : dailyOrders?.tomorrow;
+    if (!dataForDay) return;
+    
+    const dateStr = dataForDay.date;
+    const { totals, lists } = dataForDay;
+    
+    let text = `UK-Chammery Meal Requests Sheet\n`;
+    text += `Date: ${dateStr} (${day.toUpperCase()})\n`;
+    text += `========================================\n\n`;
+    
+    text += `Breakfast (${totals.breakfast}):\n`;
+    lists.breakfast.forEach((name: string, i: number) => {
+      text += `${i + 1}. ${name}\n`;
+    });
+    text += `\n`;
+    
+    text += `Lunch (${totals.lunch}):\n`;
+    lists.lunch.forEach((name: string, i: number) => {
+      text += `${i + 1}. ${name}\n`;
+    });
+    text += `\n`;
+    
+    const totalDinner = totals.dinner + (totals.dinnerUK || 0) + (totals.dinnerUK2 || 0) + (totals.dinnerKadana || 0);
+    text += `Dinner (Total: ${totalDinner} | Office: ${totals.dinner}, UK: ${totals.dinnerUK || 0}, UK2: ${totals.dinnerUK2 || 0}, Kadana: ${totals.dinnerKadana || 0}):\n`;
+    lists.dinner.forEach((name: string, i: number) => {
+      text += `${i + 1}. ${name}\n`;
+    });
+    
+    navigator.clipboard.writeText(text);
+    flashSuccess(`Orders for ${day} copied to clipboard!`);
   };
 
   // Load Notifications
@@ -1011,6 +1073,160 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
             </div>
           </div>
         )}
+
+        {/* All Staff Orders Section */}
+        {activeSection === 'all_orders' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="card">
+              <h3 style={{ fontSize: '1.15rem', borderBottom: '1.5px solid var(--border)', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ClipboardList size={20} /> Staff Meal Orders
+              </h3>
+
+              {/* Sub-tabs for Today and Tomorrow */}
+              <div className="tabs" style={{ margin: '12px 0 8px 0', borderBottom: 'none' }}>
+                <button 
+                  className={`tab ${dailyOrdersTab === 'today' ? 'tab-active' : ''}`}
+                  onClick={() => setDailyOrdersTab('today')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', flex: 1, padding: '10px 0' }}
+                >
+                  Today ({dailyOrders?.today?.date || '...'})
+                </button>
+                <button 
+                  className={`tab ${dailyOrdersTab === 'tomorrow' ? 'tab-active' : ''}`}
+                  onClick={() => setDailyOrdersTab('tomorrow')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', flex: 1, padding: '10px 0' }}
+                >
+                  Tomorrow ({dailyOrders?.tomorrow?.date || '...'})
+                </button>
+              </div>
+
+              {loadingDailyOrders ? (
+                <p style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px' }}>Loading orders...</p>
+              ) : !dailyOrders ? (
+                <p style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px' }}>Failed to load daily orders data.</p>
+              ) : (
+                (() => {
+                  const dayData = dailyOrdersTab === 'today' ? dailyOrders.today : dailyOrders.tomorrow;
+                  const totals = dayData.totals;
+                  const lists = dayData.lists;
+                  
+                  // Total Dinner Sum
+                  const totalDinner = totals.dinner + (totals.dinnerUK || 0) + (totals.dinnerUK2 || 0) + (totals.dinnerKadana || 0);
+
+                  // Create a list of all unique users who ordered anything (stripping location suffixes for list unification)
+                  const allOrderers = Array.from(new Set([
+                    ...lists.breakfast,
+                    ...lists.lunch,
+                    ...lists.dinner.map((d: string) => d.replace(/ \((UK Guest|UK Guest 2|Kadana Guest)\)/, ''))
+                  ])).sort();
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+                      {/* Summary Cards Row */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="card" style={{ padding: '12px', borderLeft: '4px solid #F59E0B', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Breakfast Orders</span>
+                          <h3 style={{ fontSize: '1.3rem', color: '#F59E0B' }}>{totals.breakfast}</h3>
+                        </div>
+
+                        <div className="card" style={{ padding: '12px', borderLeft: '4px solid #10B981', gap: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Lunch Orders</span>
+                          <h3 style={{ fontSize: '1.3rem', color: '#10B981' }}>{totals.lunch}</h3>
+                        </div>
+
+                        <div className="card" style={{ padding: '12px', borderLeft: '4px solid #3B82F6', gap: '4px', gridColumn: 'span 2' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Dinner Orders (Total: {totalDinner})</span>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--foreground)' }}>
+                              Office Staff: <strong style={{ color: 'var(--primary)' }}>{totals.dinner}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--foreground)' }}>
+                              UK Guest: <strong style={{ color: 'var(--primary)' }}>{totals.dinnerUK || 0}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--foreground)' }}>
+                              UK Guest 2: <strong style={{ color: 'var(--primary)' }}>{totals.dinnerUK2 || 0}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--foreground)' }}>
+                              Kadana Guest: <strong style={{ color: 'var(--primary)' }}>{totals.dinnerKadana || 0}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Copy Action Button */}
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={() => handleCopyOrdersText(dailyOrdersTab)}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', borderRadius: '9999px', fontSize: '0.9rem', fontWeight: 600 }}
+                      >
+                        <ClipboardList size={18} /> Copy Orders Details
+                      </button>
+
+                      {/* Staff Orders List Table */}
+                      <div className="table-container" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: 'var(--bg-light)' }}>
+                              <th style={{ padding: '12px', textAlign: 'left', fontSize: '0.8rem', borderBottom: '1.5px solid var(--border)' }}>Staff Member</th>
+                              <th style={{ padding: '12px', textAlign: 'center', fontSize: '0.8rem', borderBottom: '1.5px solid var(--border)' }}>Breakfast</th>
+                              <th style={{ padding: '12px', textAlign: 'center', fontSize: '0.8rem', borderBottom: '1.5px solid var(--border)' }}>Lunch</th>
+                              <th style={{ padding: '12px', textAlign: 'center', fontSize: '0.8rem', borderBottom: '1.5px solid var(--border)' }}>Dinner</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {allOrderers.length === 0 ? (
+                              <tr>
+                                <td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: 'var(--muted)' }}>No orders placed for this day.</td>
+                              </tr>
+                            ) : (
+                              allOrderers.map(name => {
+                                const hasBreakfast = lists.breakfast.includes(name);
+                                const hasLunch = lists.lunch.includes(name);
+                                const dinnerEntry = lists.dinner.find((d: string) => d === name || d.startsWith(`${name} (`));
+                                const hasDinner = !!dinnerEntry;
+                                const guestSuffix = dinnerEntry && dinnerEntry.includes('(') 
+                                  ? dinnerEntry.substring(dinnerEntry.indexOf(' ')) 
+                                  : '';
+                                return (
+                                  <tr key={name} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <td style={{ padding: '12px', fontWeight: 600, fontSize: '0.85rem' }}>
+                                      {name}{hasDinner && guestSuffix && <span style={{ color: 'var(--muted)', fontSize: '0.75rem', fontWeight: 400 }}>{guestSuffix}</span>}
+                                    </td>
+                                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                                      {hasBreakfast ? (
+                                        <span style={{ color: '#F59E0B', fontWeight: 800 }}>✓</span>
+                                      ) : (
+                                        <span style={{ color: '#E5E7EB' }}>-</span>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                                      {hasLunch ? (
+                                        <span style={{ color: '#10B981', fontWeight: 800 }}>✓</span>
+                                      ) : (
+                                        <span style={{ color: '#E5E7EB' }}>-</span>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                                      {hasDinner ? (
+                                        <span style={{ color: '#3B82F6', fontWeight: 800 }}>✓</span>
+                                      ) : (
+                                        <span style={{ color: '#E5E7EB' }}>-</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Tab Navigation Bar */}
@@ -1033,7 +1249,7 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
         <div style={{
           position: 'absolute',
           top: '8px',
-          left: `calc(${getActiveTabIndex() * 20}% + (20% - 48px) / 2)`,
+          left: `calc(${getActiveTabIndex() * (100 / 6)}% + (${100 / 6}% - 48px) / 2)`,
           width: '48px',
           height: '48px',
           borderRadius: '50%',
@@ -1119,6 +1335,28 @@ export default function UserDashboard({ user, onLogout }: UserDashboardProps) {
           >
             <Calendar size={20} />
             {activeSection !== 'order' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Order</span>}
+          </button>
+
+          {/* Item 3.5: Orders */}
+          <button 
+            className="bottom-nav-item"
+            onClick={() => { setActiveSection('all_orders'); loadDailyOrders(); }}
+            style={{ 
+              flex: 1, 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '2px', 
+              border: 'none', 
+              background: 'transparent',
+              color: activeSection === 'all_orders' ? '#ffffff' : 'var(--muted)',
+              transition: 'color 0.25s ease'
+            }}
+          >
+            <ClipboardList size={20} />
+            {activeSection !== 'all_orders' && <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>Orders</span>}
           </button>
 
           {/* Item 4: Alerts */}
